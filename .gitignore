@@ -1,2 +1,3 @@
 services/ingestion/node_modules/
 services/fusion/node_modules/
+services/validation/node_modules/
