@@ -1,0 +1,11 @@
+{
+  "name": "@tfg/sources",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "simulator.js",
+  "scripts": {
+    "start": "node simulator.js",
+    "source-a": "node source-a.js",
+    "source-b": "node source-b.js"
+  }
+}
