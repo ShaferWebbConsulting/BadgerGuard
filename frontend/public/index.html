@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trusted Fusion Gateway — Dashboard</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0b0e14;
+      color: #c8ccd4;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1e28; }
+    ::-webkit-scrollbar-thumb { background: #3a3f4b; border-radius: 3px; }
+
+    /* ── Layout ── */
+    .app { max-width: 1440px; margin: 0 auto; padding: 16px 24px 32px; }
+    .header { text-align: center; padding: 20px 0 12px; border-bottom: 1px solid #1e2230; margin-bottom: 16px; }
+    .header h1 { font-size: 1.6rem; color: #e0e4ec; letter-spacing: 1px; }
+    .header p { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
+
+    /* ── Stats Bar ── */
+    .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat-card {
+      flex: 1 1 140px; background: #141820; border: 1px solid #1e2230;
+      border-radius: 8px; padding: 12px 16px; text-align: center;
+    }
+    .stat-card .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; margin-top: 2px; }
+
+    /* ── Pipeline Flow ── */
+    .pipeline { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 18px; flex-wrap: wrap; }
+    .pipeline-node {
+      padding: 10px 22px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+      border: 1px solid; text-align: center; min-width: 110px;
+    }
+    .pipeline-arrow { font-size: 1.3rem; color: #3a3f4b; padding: 0 6px; }
+
+    /* ── Panels ── */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: #141820; border: 1px solid #1e2230; border-radius: 10px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .panel-header {
+      padding: 10px 16px; font-size: 0.82rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #1e2230;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-body { padding: 0; overflow-y: auto; max-height: 340px; }
+    .full-width { grid-column: 1 / -1; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th { background: #111520; padding: 8px 12px; text-align: left; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
+    td { padding: 7px 12px; border-top: 1px solid #1a1e28; white-space: nowrap; }
+    tr:hover td { background: #181c26; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-pending { background: #3b3118; color: #f5c542; }
+    .badge-verified { background: #163024; color: #34d399; }
+    .badge-rejected { background: #301a1a; color: #f87171; }
+    .badge-normal { background: #163024; color: #34d399; }
+    .badge-elevated { background: #3b3118; color: #fb923c; }
+    .badge-critical { background: #301a1a; color: #f87171; }
+
+    /* ── Progress Bar ── */
+    .progress { background: #1a1e28; border-radius: 4px; height: 8px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+    /* ── Audit Log ── */
+    .log-entry { padding: 5px 14px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.72rem; border-top: 1px solid #1a1e28; display: flex; gap: 10px; }
+    .log-entry:first-child { border-top: none; }
+    .log-ts { color: #4b5563; min-width: 75px; flex-shrink: 0; }
+    .log-stage { font-weight: 600; min-width: 80px; flex-shrink: 0; }
+    .log-msg { color: #9ca3af; word-break: break-word; white-space: normal; }
+
+    /* ── Colors ── */
+    .c-blue { color: #60a5fa; }
+    .c-green { color: #34d399; }
+    .c-purple { color: #a78bfa; }
+    .c-orange { color: #fb923c; }
+    .c-red { color: #f87171; }
+    .c-yellow { color: #f5c542; }
+    .c-dim { color: #4b5563; }
+
+    .connecting { text-align: center; padding: 28px 16px; color: #4b5563; font-size: 0.82rem; }
+    .dot-pulse::after { content: '...'; animation: dots 1.4s steps(4, end) infinite; }
+    @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* ── Helpers ── */
+    const truncId = (id) => id ? id.substring(0, 8) : '—';
+    const fmtTime = (ts) => {
+      if (!ts) return '—';
+      try { return new Date(ts).toLocaleTimeString(); }
+      catch { return '—'; }
+    };
+
+    async function apiFetch(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    /* ── Stats Bar ── */
+    function StatsBar({ events, fused, validations, analytics }) {
+      const verified = validations.filter(v => v.status === 'verified').length;
+      const rejected = validations.filter(v => v.status === 'rejected').length;
+      return (
+        <div className="stats-bar">
+          <StatCard label="Ingested" value={events.length} color="#60a5fa" />
+          <StatCard label="Fused" value={fused.length} color="#a78bfa" />
+          <StatCard label="Verified" value={verified} color="#34d399" />
+          <StatCard label="Rejected" value={rejected} color="#f87171" />
+          <StatCard label="Analyzed" value={analytics.length} color="#fb923c" />
+        </div>
+      );
+    }
+    function StatCard({ label, value, color }) {
+      return (
+        <div className="stat-card">
+          <div className="label">{label}</div>
+          <div className="value" style={{ color }}>{value}</div>
+        </div>
+      );
+    }
+
+    /* ── Pipeline Flow ── */
+    function PipelineFlow({ events, fused, validations, analytics }) {
+      const stages = [
+        { name: 'Sources', color: '#6b7280', border: '#3a3f4b', ok: true },
+        { name: 'Ingestion', color: '#60a5fa', border: '#2563eb', ok: events.length > 0 },
+        { name: 'Fusion', color: '#a78bfa', border: '#7c3aed', ok: fused.length > 0 },
+        { name: 'Validation', color: '#fb923c', border: '#ea580c', ok: validations.length > 0 },
+        { name: 'Analytics', color: '#34d399', border: '#059669', ok: analytics.length > 0 },
+      ];
+      return (
+        <div className="pipeline">
+          {stages.map((s, i) => (
+            <React.Fragment key={s.name}>
+              {i > 0 && <span className="pipeline-arrow">→</span>}
+              <div
+                className="pipeline-node"
+                style={{
+                  borderColor: s.ok ? s.border : '#3a3f4b',
+                  color: s.ok ? s.color : '#4b5563',
+                  background: s.ok ? `${s.border}18` : '#141820',
+                }}
+              >
+                {s.name}
+                <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: 2, opacity: 0.7 }}>
+                  {s.ok ? '● online' : '○ waiting'}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      );
+    }
+
+    /* ── Raw Events Panel ── */
+    function RawEventsPanel({ events }) {
+      const sourceColor = (src) => {
+        if (!src) return '';
+        if (src.includes('alpha')) return 'c-blue';
+        if (src.includes('beta')) return 'c-green';
+        return '';
+      };
+      if (events.length === 0) return <Connecting label="raw events" />;
+      return (
+        <table>
+          <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Object ID</th><th>Time</th></tr></thead>
+          <tbody>
+            {events.slice(-20).reverse().map((e, i) => (
+              <tr key={e.eventId || i}>
+                <td className="c-dim">{truncId(e.eventId)}</td>
+                <td className={sourceColor(e.source)}>{e.source || '—'}</td>
+                <td>{e.type || '—'}</td>
+                <td>{e.objectId || e.object_id || '—'}</td>
+                <td className="c-dim">{fmtTime(e.timestamp)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+
+    /* ── Fused Events Panel ── */
+    function FusedEventsPanel({ fused }) {
+      if (fused.length === 0) return <Connecting label="fused events" />;
+      return (
+        <table>
+          <thead><tr><th>Event ID</th><th>Sources</th><th>Object ID</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody>
+            {fused.slice(-20).reverse().map((f, i) => {
+              const srcCount = Array.isArray(f.sources) ? f.sources.length : (f.sourceCount || '—');
+              const badgeCls = f.status === 'verified' ? 'badge-verified'
+                : f.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+              return (
+                <tr key={f.eventId || i}>
+                  <td className="c-dim">{truncId(f.eventId)}</td>
+                  <td>{srcCount}</td>
+                  <td>{f.objectId || f.object_id || '—'}</td>
+                  <td>{f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '—'}</td>
+                  <td><span className={`badge ${badgeCls}`}>{f.status || 'pending'}</span></td>
+                  <td className="c-dim">{fmtTime(f.timestamp || f.fusedAt)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
+    }
+
+    /* ── Validation Panel ── */
+    function ValidationPanel({ validations }) {
+      if (validations.length === 0) return <Connecting label="validations" />;
+      return (
+        <table>
+          <thead><tr><th>Event ID</th><th>Status</th><th>Votes</th><th>Consensus</th></tr></thead>
+          <tbody>
+            {validations.slice(-20).reverse().map((v, i) => {
+              const badgeCls = v.status === 'verified' ? 'badge-verified'
+                : v.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+              const votes = v.votes || v.validatorVotes || [];
+              return (
+                <tr key={v.eventId || i}>
+                  <td className="c-dim">{truncId(v.eventId)}</td>
+                  <td><span className={`badge ${badgeCls}`}>{v.status || '—'}</span></td>
+                  <td>
+                    {votes.map((vote, vi) => (
+                      <span key={vi} style={{ marginRight: 4 }}>
+                        {vote.vote === 'approve' || vote.approved
+                          ? <span className="c-green">✓</span>
+                          : <span className="c-red">✗</span>}
+                      </span>
+                    ))}
+                    {votes.length === 0 && '—'}
+                  </td>
+                  <td>{v.consensus != null ? `${(v.consensus * 100).toFixed(0)}%` : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
+    }
+
+    /* ── Analytics Panel ── */
+    function AnalyticsPanel({ analytics }) {
+      if (analytics.length === 0) return <Connecting label="analytics" />;
+      const barColor = (score) => {
+        if (score >= 0.7) return '#f87171';
+        if (score >= 0.4) return '#fb923c';
+        return '#34d399';
+      };
+      return (
+        <table>
+          <thead><tr><th>Event ID</th><th>Classification</th><th>Anomaly Score</th><th>Factors</th></tr></thead>
+          <tbody>
+            {analytics.slice(-20).reverse().map((a, i) => {
+              const cls = a.classification || 'normal';
+              const badgeCls = cls === 'critical' ? 'badge-critical'
+                : cls === 'elevated' ? 'badge-elevated' : 'badge-normal';
+              const score = a.anomalyScore ?? a.anomaly_score ?? 0;
+              const factors = a.factors || a.anomalyFactors || [];
+              return (
+                <tr key={a.eventId || i}>
+                  <td className="c-dim">{truncId(a.eventId)}</td>
+                  <td><span className={`badge ${badgeCls}`}>{cls}</span></td>
+                  <td>
+                    <div className="progress">
+                      <div className="progress-fill" style={{ width: `${score * 100}%`, background: barColor(score) }} />
+                    </div>
+                    <span style={{ marginLeft: 6, fontSize: '0.72rem' }}>{(score * 100).toFixed(0)}%</span>
+                  </td>
+                  <td style={{ fontSize: '0.7rem', color: '#6b7280', whiteSpace: 'normal', maxWidth: 200 }}>
+                    {Array.isArray(factors) ? factors.join(', ') : (factors || '—')}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
+    }
+
+    /* ── Audit Log ── */
+    function AuditLogPanel({ logs }) {
+      const endRef = useRef(null);
+      useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+
+      const stageColor = { ingestion: 'c-blue', fusion: 'c-purple', validation: 'c-orange', analytics: 'c-green' };
+      if (logs.length === 0) return <Connecting label="audit logs" />;
+      return (
+        <div style={{ maxHeight: 300, overflow: 'auto' }}>
+          {logs.slice(-100).map((l, i) => (
+            <div className="log-entry" key={i}>
+              <span className="log-ts">{fmtTime(l.timestamp)}</span>
+              <span className={`log-stage ${stageColor[l.stage] || ''}`}>[{l.stage || '?'}]</span>
+              <span className="log-msg">{l.message || l.action || JSON.stringify(l)}</span>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+      );
+    }
+
+    /* ── Connecting placeholder ── */
+    function Connecting({ label }) {
+      return <div className="connecting">Connecting to {label}<span className="dot-pulse" /></div>;
+    }
+
+    /* ── App ── */
+    function App() {
+      const [events, setEvents] = useState([]);
+      const [fused, setFused] = useState([]);
+      const [validations, setValidations] = useState([]);
+      const [analytics, setAnalytics] = useState([]);
+      const [logs, setLogs] = useState([]);
+
+      const poll = useCallback(async () => {
+        const safe = async (url) => {
+          try { return await apiFetch(url); }
+          catch { return null; }
+        };
+
+        const [evRes, fuRes, vaRes, anRes, logI, logF, logV, logA] = await Promise.all([
+          safe('/api/ingestion/events?limit=50'),
+          safe('/api/fusion/fused-events?limit=50'),
+          safe('/api/validation/validations?limit=50'),
+          safe('/api/analytics/results?limit=50'),
+          safe('/api/ingestion/audit'),
+          safe('/api/fusion/audit'),
+          safe('/api/validation/audit'),
+          safe('/api/analytics/audit'),
+        ]);
+
+        if (evRes) setEvents(Array.isArray(evRes) ? evRes : (evRes.events || []));
+        if (fuRes) setFused(Array.isArray(fuRes) ? fuRes : (fuRes.events || fuRes.fusedEvents || []));
+        if (vaRes) setValidations(Array.isArray(vaRes) ? vaRes : (vaRes.validations || []));
+        if (anRes) setAnalytics(Array.isArray(anRes) ? anRes : (anRes.results || []));
+
+        const merged = [
+          ...((logI && (Array.isArray(logI) ? logI : logI.entries || [])) || []).map(e => ({ ...e, stage: e.stage || 'ingestion' })),
+          ...((logF && (Array.isArray(logF) ? logF : logF.entries || [])) || []).map(e => ({ ...e, stage: e.stage || 'fusion' })),
+          ...((logV && (Array.isArray(logV) ? logV : logV.entries || [])) || []).map(e => ({ ...e, stage: e.stage || 'validation' })),
+          ...((logA && (Array.isArray(logA) ? logA : logA.entries || [])) || []).map(e => ({ ...e, stage: e.stage || 'analytics' })),
+        ].sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+        setLogs(merged);
+      }, []);
+
+      useEffect(() => {
+        poll();
+        const id = setInterval(poll, 2000);
+        return () => clearInterval(id);
+      }, [poll]);
+
+      return (
+        <div className="app">
+          <header className="header">
+            <h1>🛰 Trusted Fusion Gateway</h1>
+            <p>Zero-Trust Multi-Source Data Fusion System</p>
+          </header>
+
+          <StatsBar events={events} fused={fused} validations={validations} analytics={analytics} />
+          <PipelineFlow events={events} fused={fused} validations={validations} analytics={analytics} />
+
+          <div className="grid">
+            <div className="panel">
+              <div className="panel-header"><span className="c-blue">●</span> Raw Events</div>
+              <div className="panel-body"><RawEventsPanel events={events} /></div>
+            </div>
+            <div className="panel">
+              <div className="panel-header"><span className="c-purple">●</span> Fused Events</div>
+              <div className="panel-body"><FusedEventsPanel fused={fused} /></div>
+            </div>
+            <div className="panel">
+              <div className="panel-header"><span className="c-orange">●</span> Validation Status</div>
+              <div className="panel-body"><ValidationPanel validations={validations} /></div>
+            </div>
+            <div className="panel">
+              <div className="panel-header"><span className="c-green">●</span> Analytics Output</div>
+              <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
+            </div>
+            <div className="panel full-width">
+              <div className="panel-header">📋 Audit Log</div>
+              <div className="panel-body"><AuditLogPanel logs={logs} /></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
