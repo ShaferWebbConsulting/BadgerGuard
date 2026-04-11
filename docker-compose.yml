@@ -21,7 +21,7 @@ services:
       - analytics
     restart: unless-stopped
 
-  # ── Ingestion API ──────────────────────────────────────────────
+  # ── Ingestion API (Rust / Axum) ────────────────────────────────
   ingestion:
     build:
       context: .
@@ -29,12 +29,11 @@ services:
     ports:
       - "3001:3001"
     environment:
-      PORT: 3001
+      PORT: "3001"
       FUSION_URL: http://fusion:3002/api/fuse
-      SHARED_PATH: ./shared
     restart: unless-stopped
 
-  # ── Fusion Service ─────────────────────────────────────────────
+  # ── Fusion Service (Rust / Axum) ───────────────────────────────
   fusion:
     build:
       context: .
@@ -42,13 +41,12 @@ services:
     ports:
       - "3002:3002"
     environment:
-      PORT: 3002
+      PORT: "3002"
       VALIDATION_URL: http://validation:3003/api/validate
       TIME_WINDOW: "10000"
-      SHARED_PATH: ./shared
     restart: unless-stopped
 
-  # ── Validation Layer ───────────────────────────────────────────
+  # ── Validation Layer (Rust / Axum) ─────────────────────────────
   validation:
     build:
       context: .
@@ -56,13 +54,13 @@ services:
     ports:
       - "3003:3003"
     environment:
-      PORT: 3003
+      PORT: "3003"
       ANALYTICS_URL: http://analytics:3004/api/analyze
       NUM_VALIDATORS: "3"
-      SHARED_PATH: ./shared
+      PROOF_BACKEND: merkle
     restart: unless-stopped
 
-  # ── Sandbox Analytics (untrusted plugin) ───────────────────────
+  # ── Sandbox Analytics (Rust / Axum, untrusted plugin) ──────────
   analytics:
     build:
       context: .
@@ -70,8 +68,7 @@ services:
     ports:
       - "3004:3004"
     environment:
-      PORT: 3004
-      SHARED_PATH: ./shared
+      PORT: "3004"
     # Sandbox constraints
     read_only: true
     tmpfs:
@@ -82,7 +79,7 @@ services:
     cpus: 0.5
     restart: unless-stopped
 
-  # ── Data Source Simulators ─────────────────────────────────────
+  # ── Data Source Simulators (Node.js) ───────────────────────────
   sources:
     build:
       context: .
