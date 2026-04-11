@@ -1,4 +1,6 @@
-services/ingestion/node_modules/
-services/fusion/node_modules/
-services/validation/node_modules/
-services/analytics/node_modules/
+node_modules/
+*.log
+.env
+dist/
+.DS_Store
+tmp/
