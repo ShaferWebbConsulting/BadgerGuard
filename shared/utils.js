@@ -5,9 +5,10 @@ export function generateId() {
   return randomUUID();
 }
 
-/** Return a SHA-256 hex digest of the JSON-serialised event. */
+/** Return a SHA-256 hex digest of the deterministically-serialised event. */
 export function hashEvent(event) {
-  return createHash("sha256").update(JSON.stringify(event)).digest("hex");
+  const stable = JSON.stringify(event, Object.keys(event).sort());
+  return createHash("sha256").update(stable).digest("hex");
 }
 
 /** Return the current time as an ISO 8601 string. */

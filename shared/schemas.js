@@ -37,8 +37,10 @@ export function RawEventSchema(event) {
   if (!isPlainObject(event.payload)) {
     errors.push("payload must be a plain object");
   }
-  if (!isNonEmptyString(event.timestamp) || !ISO_DATE_RE.test(event.timestamp)) {
-    errors.push("timestamp must be an ISO 8601 string ending in Z");
+  if (!isNonEmptyString(event.timestamp)) {
+    errors.push("timestamp must be a non-empty string");
+  } else if (!ISO_DATE_RE.test(event.timestamp)) {
+    errors.push("timestamp must be an ISO 8601 UTC string ending in Z");
   }
   if (!isNonEmptyString(event.object_id)) {
     errors.push("object_id must be a non-empty string");
@@ -82,8 +84,10 @@ export function FusedEventSchema(event) {
   ) {
     errors.push("confidence_score must be a number between 0 and 1");
   }
-  if (!isNonEmptyString(event.timestamp) || !ISO_DATE_RE.test(event.timestamp)) {
-    errors.push("timestamp must be an ISO 8601 string ending in Z");
+  if (!isNonEmptyString(event.timestamp)) {
+    errors.push("timestamp must be a non-empty string");
+  } else if (!ISO_DATE_RE.test(event.timestamp)) {
+    errors.push("timestamp must be an ISO 8601 UTC string ending in Z");
   }
   if (!isNonEmptyString(event.payload_hash)) {
     errors.push("payload_hash must be a non-empty string");
@@ -123,8 +127,10 @@ export function ValidationResultSchema(result) {
   if (!isNonEmptyString(result.hash)) {
     errors.push("hash must be a non-empty string");
   }
-  if (!isNonEmptyString(result.timestamp) || !ISO_DATE_RE.test(result.timestamp)) {
-    errors.push("timestamp must be an ISO 8601 string ending in Z");
+  if (!isNonEmptyString(result.timestamp)) {
+    errors.push("timestamp must be a non-empty string");
+  } else if (!ISO_DATE_RE.test(result.timestamp)) {
+    errors.push("timestamp must be an ISO 8601 UTC string ending in Z");
   }
 
   if (errors.length > 0) {
@@ -152,8 +158,10 @@ export function AnalyticsResultSchema(result) {
   if (!isPlainObject(result.result)) {
     errors.push("result must be a plain object");
   }
-  if (!isNonEmptyString(result.timestamp) || !ISO_DATE_RE.test(result.timestamp)) {
-    errors.push("timestamp must be an ISO 8601 string ending in Z");
+  if (!isNonEmptyString(result.timestamp)) {
+    errors.push("timestamp must be a non-empty string");
+  } else if (!ISO_DATE_RE.test(result.timestamp)) {
+    errors.push("timestamp must be an ISO 8601 UTC string ending in Z");
   }
 
   if (errors.length > 0) {
@@ -184,8 +192,10 @@ export function AuditLogSchema(entry) {
   if (!isNonEmptyString(entry.message)) {
     errors.push("message must be a non-empty string");
   }
-  if (!isNonEmptyString(entry.timestamp) || !ISO_DATE_RE.test(entry.timestamp)) {
-    errors.push("timestamp must be an ISO 8601 string ending in Z");
+  if (!isNonEmptyString(entry.timestamp)) {
+    errors.push("timestamp must be a non-empty string");
+  } else if (!ISO_DATE_RE.test(entry.timestamp)) {
+    errors.push("timestamp must be an ISO 8601 UTC string ending in Z");
   }
   if (entry.details !== undefined && !isPlainObject(entry.details)) {
     errors.push("details must be a plain object when provided");
