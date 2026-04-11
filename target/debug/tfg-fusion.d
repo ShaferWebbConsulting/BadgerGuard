@@ -1,1 +1,0 @@
-/home/runner/work/AstroBadger/AstroBadger/target/debug/tfg-fusion: /home/runner/work/AstroBadger/AstroBadger/services/fusion/src/main.rs /home/runner/work/AstroBadger/AstroBadger/shared/src/lib.rs /home/runner/work/AstroBadger/AstroBadger/shared/src/schemas.rs /home/runner/work/AstroBadger/AstroBadger/shared/src/utils.rs
