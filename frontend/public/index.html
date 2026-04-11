@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trusted Fusion Gateway — Dashboard</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/react.production.min.js"></script>
+  <script src="/react-dom.production.min.js"></script>
+  <script src="/babel.min.js"></script>
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -191,11 +191,11 @@
           <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Object ID</th><th>Time</th></tr></thead>
           <tbody>
             {events.slice(-20).reverse().map((e, i) => (
-              <tr key={e.eventId || i}>
-                <td className="c-dim">{truncId(e.eventId)}</td>
-                <td className={sourceColor(e.source)}>{e.source || '—'}</td>
-                <td>{e.type || '—'}</td>
-                <td>{e.objectId || e.object_id || '—'}</td>
+              <tr key={e.event_id || i}>
+                <td className="c-dim">{truncId(e.event_id)}</td>
+                <td className={sourceColor(e.source_id || '')}>{e.source_id || '—'}</td>
+                <td>{e.event_type || '—'}</td>
+                <td>{e.object_id || '—'}</td>
                 <td className="c-dim">{fmtTime(e.timestamp)}</td>
               </tr>
             ))}
@@ -212,17 +212,18 @@
           <thead><tr><th>Event ID</th><th>Sources</th><th>Object ID</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
           <tbody>
             {fused.slice(-20).reverse().map((f, i) => {
-              const srcCount = Array.isArray(f.sources) ? f.sources.length : (f.sourceCount || '—');
+              const srcCount = Array.isArray(f.sources) ? f.sources.length : '—';
               const badgeCls = f.status === 'verified' ? 'badge-verified'
                 : f.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+              const conf = f.confidence_score ?? f.confidence;
               return (
-                <tr key={f.eventId || i}>
-                  <td className="c-dim">{truncId(f.eventId)}</td>
+                <tr key={f.event_id || i}>
+                  <td className="c-dim">{truncId(f.event_id)}</td>
                   <td>{srcCount}</td>
-                  <td>{f.objectId || f.object_id || '—'}</td>
-                  <td>{f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '—'}</td>
+                  <td>{f.object_id || '—'}</td>
+                  <td>{conf != null ? `${(conf * 100).toFixed(0)}%` : '—'}</td>
                   <td><span className={`badge ${badgeCls}`}>{f.status || 'pending'}</span></td>
-                  <td className="c-dim">{fmtTime(f.timestamp || f.fusedAt)}</td>
+                  <td className="c-dim">{fmtTime(f.timestamp)}</td>
                 </tr>
               );
             })}
@@ -241,22 +242,22 @@
             {validations.slice(-20).reverse().map((v, i) => {
               const badgeCls = v.status === 'verified' ? 'badge-verified'
                 : v.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
-              const votes = v.votes || v.validatorVotes || [];
+              const votes = v.votes || [];
               return (
-                <tr key={v.eventId || i}>
-                  <td className="c-dim">{truncId(v.eventId)}</td>
+                <tr key={v.event_id || i}>
+                  <td className="c-dim">{truncId(v.event_id)}</td>
                   <td><span className={`badge ${badgeCls}`}>{v.status || '—'}</span></td>
                   <td>
                     {votes.map((vote, vi) => (
                       <span key={vi} style={{ marginRight: 4 }}>
-                        {vote.vote === 'approve' || vote.approved
+                        {vote.vote === 'approve'
                           ? <span className="c-green">✓</span>
                           : <span className="c-red">✗</span>}
                       </span>
                     ))}
                     {votes.length === 0 && '—'}
                   </td>
-                  <td>{v.consensus != null ? `${(v.consensus * 100).toFixed(0)}%` : '—'}</td>
+                  <td>{v.consensus_reached != null ? (v.consensus_reached ? 'Yes' : 'No') : '—'}</td>
                 </tr>
               );
             })}
@@ -278,14 +279,15 @@
           <thead><tr><th>Event ID</th><th>Classification</th><th>Anomaly Score</th><th>Factors</th></tr></thead>
           <tbody>
             {analytics.slice(-20).reverse().map((a, i) => {
-              const cls = a.classification || 'normal';
+              const r = a.result || {};
+              const cls = r.classification || 'normal';
               const badgeCls = cls === 'critical' ? 'badge-critical'
                 : cls === 'elevated' ? 'badge-elevated' : 'badge-normal';
-              const score = a.anomalyScore ?? a.anomaly_score ?? 0;
-              const factors = a.factors || a.anomalyFactors || [];
+              const score = r.anomaly_score ?? 0;
+              const factors = r.factors || [];
               return (
-                <tr key={a.eventId || i}>
-                  <td className="c-dim">{truncId(a.eventId)}</td>
+                <tr key={a.event_id || i}>
+                  <td className="c-dim">{truncId(a.event_id)}</td>
                   <td><span className={`badge ${badgeCls}`}>{cls}</span></td>
                   <td>
                     <div className="progress">

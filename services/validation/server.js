@@ -23,11 +23,12 @@ app.post("/api/validate", async (req, res) => {
 
   // Forward verified events to analytics (best-effort)
   if (result.status === "verified") {
+    const verifiedEvent = { ...fusedEvent, status: "verified" };
     try {
       await fetch(ANALYTICS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fusedEvent),
+        body: JSON.stringify(verifiedEvent),
       });
     } catch {
       // Analytics service unavailable — continue
