@@ -1,0 +1,13 @@
+node_modules/
+*.log
+.env
+dist/
+.DS_Store
+tmp/
+
+# Vendor JS files (generated from node_modules at build time)
+frontend/public/react.production.min.js
+frontend/public/react-dom.production.min.js
+frontend/public/babel.min.js
+
+target/

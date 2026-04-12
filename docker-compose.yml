@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  # ── Frontend Dashboard ─────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      INGESTION_HOST: ingestion
+      FUSION_HOST: fusion
+      VALIDATION_HOST: validation
+      ANALYTICS_HOST: analytics
+    depends_on:
+      - ingestion
+      - fusion
+      - validation
+      - analytics
+    restart: unless-stopped
+
+  # ── Ingestion API (Rust / Axum) ────────────────────────────────
+  ingestion:
+    build:
+      context: .
+      dockerfile: services/ingestion/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      FUSION_URL: http://fusion:3002/api/fuse
+    restart: unless-stopped
+
+  # ── Fusion Service (Rust / Axum) ───────────────────────────────
+  fusion:
+    build:
+      context: .
+      dockerfile: services/fusion/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: "3002"
+      VALIDATION_URL: http://validation:3003/api/validate
+      TIME_WINDOW: "10000"
+    restart: unless-stopped
+
+  # ── Validation Layer (Rust / Axum) ─────────────────────────────
+  validation:
+    build:
+      context: .
+      dockerfile: services/validation/Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      ANALYTICS_URL: http://analytics:3004/api/analyze
+      NUM_VALIDATORS: "3"
+      PROOF_BACKEND: merkle
+    restart: unless-stopped
+
+  # ── Sandbox Analytics (Rust / Axum, untrusted plugin) ──────────
+  analytics:
+    build:
+      context: .
+      dockerfile: services/analytics/Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: "3004"
+    # Sandbox constraints
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.5
+    restart: unless-stopped
+
+  # ── Data Source Simulators (Node.js) ───────────────────────────
+  sources:
+    build:
+      context: .
+      dockerfile: services/sources/Dockerfile
+    environment:
+      INGESTION_URL: http://ingestion:3001/api/events
+      SOURCE_A_INTERVAL: "3000"
+      SOURCE_B_INTERVAL: "4000"
+    depends_on:
+      - ingestion
+    restart: unless-stopped
