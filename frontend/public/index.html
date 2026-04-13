@@ -342,9 +342,9 @@
       return trend;
     }
 
-    function TrendArrow({ trend, invertColor }) {
-      if (trend === 'up') return <span className={`trend-indicator ${invertColor ? 'trend-down' : 'trend-up'}`}>\u2191</span>;
-      if (trend === 'down') return <span className={`trend-indicator ${invertColor ? 'trend-up' : 'trend-down'}`}>\u2193</span>;
+    function TrendArrow({ trend, goodWhenUp }) {
+      if (trend === 'up') return <span className={`trend-indicator ${goodWhenUp ? 'trend-down' : 'trend-up'}`}>\u2191</span>;
+      if (trend === 'down') return <span className={`trend-indicator ${goodWhenUp ? 'trend-up' : 'trend-down'}`}>\u2193</span>;
       return <span className="trend-indicator trend-stable">\u2192</span>;
     }
 
@@ -378,7 +378,7 @@
           <div className="mission-status-item">
             <div className="mission-status-label">Trusted Events</div>
             <div className="mission-status-value" style={{ color: '#34d399' }}>
-              {verified}<TrendArrow trend={verifiedTrend} invertColor />
+              {verified}<TrendArrow trend={verifiedTrend} goodWhenUp />
             </div>
             <div className="time-context">Last 60 seconds</div>
           </div>
@@ -1113,10 +1113,11 @@
       }, [poll]);
 
       const handleAddSource = useCallback(() => {
-        const id = `vendor-${String.fromCharCode(68 + dynamicSources.length)}-sensor-${Date.now().toString(36).slice(-4)}`;
+        const srcNum = dynamicSources.length + 1;
+        const id = `vendor-new-${srcNum}-sensor-${Date.now().toString(36).slice(-4)}`;
         const newSrc = { id, addedAt: new Date().toISOString(), events: 0 };
         setDynamicSources(prev => [...prev, newSrc]);
-        VENDOR_NAMES[id] = `Vendor-${String.fromCharCode(68 + dynamicSources.length)} Sensor (New)`;
+        VENDOR_NAMES[id] = `New Vendor-${srcNum} Sensor`;
       }, [dynamicSources.length]);
 
       const enrichedFused = useMemo(
@@ -1136,7 +1137,7 @@
               Live Data Stream
               {lastUpdated && (
                 <span style={{ color: '#6b7280', marginLeft: 8 }}>
-                  Updated {updatedAgo != null && updatedAgo <= 10 ? `${updatedAgo}s ago` : 'just now'}
+                  Updated {updatedAgo != null && updatedAgo <= 60 ? `${updatedAgo}s ago` : 'just now'}
                 </span>
               )}
             </div>
