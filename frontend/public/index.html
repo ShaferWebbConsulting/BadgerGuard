@@ -740,12 +740,25 @@
 
     /* Audit Log */
     function AuditLogPanel({ logs }) {
-      const endRef = useRef(null);
-      useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+      const containerRef = useRef(null);
+      const wasAtBottomRef = useRef(true);
+      useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        if (wasAtBottomRef.current) {
+          el.scrollTop = el.scrollHeight;
+        }
+      }, [logs]);
+      const handleScroll = () => {
+        const el = containerRef.current;
+        if (!el) return;
+        const threshold = 30;
+        wasAtBottomRef.current = (el.scrollHeight - el.scrollTop - el.clientHeight) < threshold;
+      };
       const stageColor = { ingestion: 'c-blue', fusion: 'c-purple', validation: 'c-orange', analytics: 'c-green' };
       if (logs.length === 0) return <Connecting label="audit logs" />;
       return (
-        <div style={{ maxHeight: 300, overflow: 'auto' }}>
+        <div ref={containerRef} onScroll={handleScroll} style={{ maxHeight: 300, overflowY: 'auto' }}>
           {logs.slice(-100).map((l, i) => (
             <div className="log-entry" key={i}>
               <span className="log-ts">{fmtTime(l.timestamp)}</span>
@@ -753,7 +766,6 @@
               <span className="log-msg">{l.message || l.action || JSON.stringify(l)}</span>
             </div>
           ))}
-          <div ref={endRef} />
         </div>
       );
     }
@@ -761,11 +773,27 @@
     /* Analytics Sandbox Panel (9.1) */
     function AnalyticsSandboxPanel() {
       const [tools, setTools] = useState([
-        { name: 'anomaly-detector-v1', status: 'ACTIVE' },
-        { name: 'threat-correlator', status: 'AVAILABLE' },
+        { name: 'anomaly-detector-v1', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-only', lastExec: new Date().toISOString() },
+        { name: 'threat-correlator', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-only', lastExec: new Date().toISOString() },
+        { name: 'Vendor-C Threat Correlator', vendor: 'Vendor-C', status: 'AVAILABLE', sandboxed: false, inputPolicy: null, lastExec: null },
       ]);
-      const loadTool = () => {
-        const newTool = { name: `custom-analytics-${Date.now().toString(36).slice(-4)}`, status: 'ACTIVE' };
+      const onboardTool = (index) => {
+        setTools(prev => prev.map((t, i) => {
+          if (i !== index) return t;
+          return { ...t, status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-only', lastExec: new Date().toISOString() };
+        }));
+      };
+      const hasAvailable = tools.some(t => t.status === 'AVAILABLE');
+      const loadNewTool = () => {
+        const num = tools.filter(t => t.vendor !== 'Internal').length + 1;
+        const newTool = {
+          name: `custom-analytics-${Date.now().toString(36).slice(-4)}`,
+          vendor: `Vendor-${String.fromCharCode(64 + num + 2)}`,
+          status: 'AVAILABLE',
+          sandboxed: false,
+          inputPolicy: null,
+          lastExec: null,
+        };
         setTools(prev => [...prev, newTool]);
       };
       return (
@@ -775,13 +803,24 @@
             <span className="badge-sandbox" style={{ marginLeft: 8 }}>Sandboxed Execution</span>
           </div>
           {tools.map((t, i) => (
-            <div className="sandbox-tool" key={i}>
-              <span className="sandbox-tool-name">{t.name}</span>
-              <span className={`sandbox-tool-status ${t.status === 'ACTIVE' ? 'c-green' : 'c-yellow'}`}>{t.status}</span>
+            <div className="sandbox-tool" key={i} style={{ flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 auto' }}>
+                <span className="sandbox-tool-name">{t.name}</span>
+                <span style={{ fontSize: '0.62rem', color: '#6b7280' }}>({t.vendor})</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className={`sandbox-tool-status ${t.status === 'ACTIVE' ? 'c-green' : 'c-yellow'}`}>{t.status}</span>
+                {t.sandboxed && <span className="badge-sandbox">Sandboxed</span>}
+                {t.inputPolicy && <span style={{ fontSize: '0.6rem', color: '#34d399' }}>Input: {t.inputPolicy}</span>}
+                {t.lastExec && <span style={{ fontSize: '0.6rem', color: '#4b5563' }}>Last exec: {fmtTime(t.lastExec)}</span>}
+                {t.status === 'AVAILABLE' && (
+                  <button className="onboard-btn" style={{ padding: '3px 10px', fontSize: '0.65rem' }} onClick={() => onboardTool(i)}>Onboard</button>
+                )}
+              </div>
             </div>
           ))}
           <div style={{ padding: '8px 12px' }}>
-            <button className="onboard-btn" onClick={loadTool}>+ Load New Analytics Tool</button>
+            <button className="onboard-btn" onClick={loadNewTool}>+ Load New Analytics Tool</button>
           </div>
         </div>
       );
