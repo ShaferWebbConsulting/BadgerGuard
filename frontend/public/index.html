@@ -27,6 +27,21 @@
     .header h1 { font-size: 1.6rem; color: #e0e4ec; letter-spacing: 1px; }
     .header p { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
 
+    /* ── Mission Status ── */
+    .mission-status {
+      background: #141820; border: 1px solid #1e2230; border-radius: 10px;
+      padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    }
+    .mission-status-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+    .mission-status-value { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
+    .mission-status-item { text-align: center; min-width: 100px; }
+    .system-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .system-operational { background: #163024; color: #34d399; border: 1px solid #059669; }
+    .system-degraded { background: #3b3118; color: #f5c542; border: 1px solid #ca8a04; }
+
     /* ── Stats Bar ── */
     .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
     .stat-card {
@@ -51,6 +66,7 @@
       background: #141820; border: 1px solid #1e2230; border-radius: 10px;
       overflow: hidden; display: flex; flex-direction: column;
     }
+    .panel-priority { border-color: #7f1d1d; }
     .panel-header {
       padding: 10px 16px; font-size: 0.82rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #1e2230;
@@ -63,7 +79,7 @@
     table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
     th { background: #111520; padding: 8px 12px; text-align: left; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
     td { padding: 7px 12px; border-top: 1px solid #1a1e28; white-space: nowrap; }
-    tr:hover td { background: #181c26; }
+    tr:hover td { background: #181c26; cursor: pointer; }
 
     /* ── Badges ── */
     .badge {
@@ -76,6 +92,8 @@
     .badge-normal { background: #163024; color: #34d399; }
     .badge-elevated { background: #3b3118; color: #fb923c; }
     .badge-critical { background: #301a1a; color: #f87171; }
+    .badge-online { background: #163024; color: #34d399; }
+    .badge-offline { background: #301a1a; color: #f87171; }
 
     /* ── Progress Bar ── */
     .progress { background: #1a1e28; border-radius: 4px; height: 8px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; }
@@ -100,12 +118,62 @@
     .connecting { text-align: center; padding: 28px 16px; color: #4b5563; font-size: 0.82rem; }
     .dot-pulse::after { content: '...'; animation: dots 1.4s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+
+    /* ── Simulation Controls ── */
+    .sim-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .sim-btn {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid #3a3f4b;
+      background: #1a1e28; color: #c8ccd4; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    }
+    .sim-btn:hover { background: #252a36; border-color: #60a5fa; }
+    .sim-btn.active { background: #301a1a; border-color: #f87171; color: #f87171; }
+
+    /* ── Drilldown Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: #141820; border: 1px solid #1e2230; border-radius: 12px;
+      width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto; padding: 20px;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #1e2230;
+    }
+    .modal-header h2 { font-size: 1.1rem; color: #e0e4ec; }
+    .modal-close {
+      background: none; border: 1px solid #3a3f4b; color: #9ca3af; border-radius: 6px;
+      padding: 4px 12px; cursor: pointer; font-size: 0.82rem;
+    }
+    .modal-close:hover { border-color: #f87171; color: #f87171; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section h3 {
+      font-size: 0.82rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .detail-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    .detail-item { flex: 1 1 180px; }
+    .detail-label { font-size: 0.68rem; color: #4b5563; text-transform: uppercase; }
+    .detail-value { font-size: 0.88rem; color: #e0e4ec; margin-top: 2px; }
+
+    /* ── Issue flag ── */
+    .issue-flag { color: #f87171; font-weight: 600; }
+    .no-issue { color: #4b5563; }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useRef, useCallback } = React;
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    /* ── Constants ── */
+    const ANOMALY_HIGH_THRESHOLD = 0.7;
+    const ANOMALY_ELEVATED_THRESHOLD = 0.4;
+    const MIN_CONFIDENCE_THRESHOLD = 0.3;
+    const ONLINE_TIMEOUT_MS = 30000;
+    const MAX_DRILLDOWN_ROWS = 10;
 
     /* ── Helpers ── */
     const truncId = (id) => id ? id.substring(0, 8) : '—';
@@ -121,108 +189,310 @@
       return res.json();
     }
 
-    /* ── Stats Bar ── */
-    function StatsBar({ events, fused, validations, analytics }) {
-      const verified = validations.filter(v => v.status === 'verified').length;
-      const rejected = validations.filter(v => v.status === 'rejected').length;
-      return (
-        <div className="stats-bar">
-          <StatCard label="Ingested" value={events.length} color="#60a5fa" />
-          <StatCard label="Fused" value={fused.length} color="#a78bfa" />
-          <StatCard label="Verified" value={verified} color="#34d399" />
-          <StatCard label="Rejected" value={rejected} color="#f87171" />
-          <StatCard label="Analyzed" value={analytics.length} color="#fb923c" />
-        </div>
-      );
+    /**
+     * Join fused events with validation results and analytics results by event_id.
+     * Returns enriched fused event objects with validation_status, consensus_reached,
+     * and analytics_result fields.
+     */
+    function enrichFusedEvents(fused, validations, analytics) {
+      const valMap = {};
+      for (const v of validations) {
+        if (v.event_id) valMap[v.event_id] = v;
+      }
+      const anaMap = {};
+      for (const a of analytics) {
+        if (a.event_id) anaMap[a.event_id] = a;
+      }
+      return fused.map(f => {
+        const val = valMap[f.event_id];
+        const ana = anaMap[f.event_id];
+        const validation_status = val ? val.status : (f.status !== 'pending' ? f.status : 'pending');
+        const consensus_reached = val ? val.consensus_reached : null;
+        const votes = val ? val.votes : [];
+        const analytics_result = ana ? ana.result : null;
+        return {
+          ...f,
+          validation_status,
+          consensus_reached,
+          votes,
+          analytics_result,
+        };
+      });
     }
-    function StatCard({ label, value, color }) {
+
+    /* ── Mission Status Panel ── */
+    function MissionStatus({ enrichedFused, events, healthData }) {
+      const verified = enrichedFused.filter(f => f.validation_status === 'verified').length;
+      const rejected = enrichedFused.filter(f => f.validation_status === 'rejected').length;
+      const pending = enrichedFused.filter(f => f.validation_status === 'pending').length;
+      const allOnline = healthData.every(h => h.ok);
+      const systemStatus = allOnline ? 'OPERATIONAL' : 'DEGRADED';
+      const statusCls = allOnline ? 'system-operational' : 'system-degraded';
       return (
-        <div className="stat-card">
-          <div className="label">{label}</div>
-          <div className="value" style={{ color }}>{value}</div>
+        <div className="mission-status">
+          <div className="mission-status-item" style={{ minWidth: 160 }}>
+            <div className="mission-status-label">System Status</div>
+            <div style={{ marginTop: 4 }}><span className={`system-badge ${statusCls}`}>{systemStatus}</span></div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Trusted Events</div>
+            <div className="mission-status-value" style={{ color: '#34d399' }}>{verified}</div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Rejected (Threats)</div>
+            <div className="mission-status-value" style={{ color: '#f87171' }}>{rejected}</div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Pending / Review</div>
+            <div className="mission-status-value" style={{ color: '#f5c542' }}>{pending}</div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Ingested</div>
+            <div className="mission-status-value" style={{ color: '#60a5fa' }}>{events.length}</div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Fused</div>
+            <div className="mission-status-value" style={{ color: '#a78bfa' }}>{enrichedFused.length}</div>
+          </div>
         </div>
       );
     }
 
-    /* ── Pipeline Flow ── */
-    function PipelineFlow({ events, fused, validations, analytics }) {
+    /* ── Data Flow Health ── */
+    function DataFlowHealth({ events, fused, validations, analytics, healthData }) {
       const stages = [
-        { name: 'Sources', color: '#6b7280', border: '#3a3f4b', ok: true },
-        { name: 'Ingestion', color: '#60a5fa', border: '#2563eb', ok: events.length > 0 },
-        { name: 'Fusion', color: '#a78bfa', border: '#7c3aed', ok: fused.length > 0 },
-        { name: 'Validation', color: '#fb923c', border: '#ea580c', ok: validations.length > 0 },
-        { name: 'Analytics', color: '#34d399', border: '#059669', ok: analytics.length > 0 },
+        { name: 'Ingestion', key: 'ingestion', color: '#60a5fa', border: '#2563eb', count: events.length },
+        { name: 'Fusion', key: 'fusion', color: '#a78bfa', border: '#7c3aed', count: fused.length },
+        { name: 'Validation', key: 'validation', color: '#fb923c', border: '#ea580c', count: validations.length },
+        { name: 'Analytics', key: 'analytics', color: '#34d399', border: '#059669', count: analytics.length },
       ];
       return (
         <div className="pipeline">
-          {stages.map((s, i) => (
-            <React.Fragment key={s.name}>
-              {i > 0 && <span className="pipeline-arrow">→</span>}
-              <div
-                className="pipeline-node"
-                style={{
-                  borderColor: s.ok ? s.border : '#3a3f4b',
-                  color: s.ok ? s.color : '#4b5563',
-                  background: s.ok ? `${s.border}18` : '#141820',
-                }}
-              >
-                {s.name}
-                <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: 2, opacity: 0.7 }}>
-                  {s.ok ? '● online' : '○ waiting'}
+          {stages.map((s, i) => {
+            const h = healthData.find(hd => hd.service === s.key);
+            const ok = h ? h.ok : s.count > 0;
+            return (
+              <React.Fragment key={s.name}>
+                {i > 0 && <span className="pipeline-arrow">→</span>}
+                <div
+                  className="pipeline-node"
+                  style={{
+                    borderColor: ok ? s.border : '#7f1d1d',
+                    color: ok ? s.color : '#f87171',
+                    background: ok ? `${s.border}18` : '#1a1010',
+                  }}
+                >
+                  {s.name}
+                  <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: 2, opacity: 0.8 }}>
+                    {ok ? '● online' : '● offline'}
+                  </div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 400, marginTop: 1, color: '#4b5563' }}>
+                    {s.count} events
+                  </div>
                 </div>
-              </div>
-            </React.Fragment>
-          ))}
+              </React.Fragment>
+            );
+          })}
         </div>
       );
     }
 
-    /* ── Raw Events Panel ── */
-    function RawEventsPanel({ events }) {
-      const sourceColor = (src) => {
-        if (!src) return '';
-        if (src.includes('alpha')) return 'c-blue';
-        if (src.includes('beta')) return 'c-green';
-        return '';
+    /* ── Priority Events Panel ── */
+    function PriorityEventsPanel({ enrichedFused }) {
+      const priorityEvents = enrichedFused.filter(f => {
+        if (f.validation_status === 'rejected') return true;
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) return true;
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return true;
+        return false;
+      });
+      if (priorityEvents.length === 0) {
+        return <div className="connecting" style={{ color: '#34d399' }}>No priority events — system nominal</div>;
+      }
+      const getReason = (f) => {
+        const reasons = [];
+        if (f.validation_status === 'rejected') reasons.push('validation rejected');
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) reasons.push('low confidence / corrupted payload');
+        if (f.analytics_result) {
+          if (f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) reasons.push('critical anomaly detected');
+          else if (f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) reasons.push('elevated anomaly detected');
+          const factors = f.analytics_result.factors || [];
+          if (factors.includes('anomaly_source_detected')) reasons.push('anomaly source');
+        }
+        return reasons.join('; ') || 'suspicious event';
       };
-      if (events.length === 0) return <Connecting label="raw events" />;
+      const getAction = (f) => {
+        if (f.validation_status === 'rejected') return 'Investigate source data integrity';
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate — manual review required';
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Quarantine — verify source health';
+        return 'Monitor — review if persists';
+      };
       return (
         <table>
-          <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Object ID</th><th>Time</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Object ID</th>
+              <th>Validation</th>
+              <th>Anomaly</th>
+              <th>Reason</th>
+              <th>Recommended Action</th>
+            </tr>
+          </thead>
           <tbody>
-            {events.slice(-20).reverse().map((e, i) => (
-              <tr key={e.event_id || i}>
-                <td className="c-dim">{truncId(e.event_id)}</td>
-                <td className={sourceColor(e.source_id || '')}>{e.source_id || '—'}</td>
-                <td>{e.event_type || '—'}</td>
-                <td>{e.object_id || '—'}</td>
-                <td className="c-dim">{fmtTime(e.timestamp)}</td>
-              </tr>
-            ))}
+            {priorityEvents.slice(0, 20).map((f, i) => {
+              const valCls = f.validation_status === 'verified' ? 'badge-verified'
+                : f.validation_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+              const anaCls = f.analytics_result
+                ? (f.analytics_result.classification === 'critical' ? 'badge-critical'
+                  : f.analytics_result.classification === 'elevated' ? 'badge-elevated' : 'badge-normal')
+                : '';
+              return (
+                <tr key={f.event_id || i}>
+                  <td>{f.object_id || '—'}</td>
+                  <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
+                  <td>
+                    {f.analytics_result
+                      ? <span className={`badge ${anaCls}`}>{f.analytics_result.classification}</span>
+                      : <span className="c-dim">—</span>}
+                  </td>
+                  <td style={{ whiteSpace: 'normal', maxWidth: 200, fontSize: '0.72rem', color: '#fb923c' }}>
+                    {getReason(f)}
+                  </td>
+                  <td style={{ whiteSpace: 'normal', maxWidth: 200, fontSize: '0.72rem', color: '#9ca3af' }}>
+                    {getAction(f)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       );
     }
 
-    /* ── Fused Events Panel ── */
-    function FusedEventsPanel({ fused }) {
-      if (fused.length === 0) return <Connecting label="fused events" />;
+    /* ── Source Health & Trust Panel ── */
+    function SourceHealthPanel({ events, enrichedFused }) {
+      const sourceMap = {};
+      for (const e of events) {
+        const sid = e.source_id || 'unknown';
+        if (!sourceMap[sid]) {
+          sourceMap[sid] = { source_id: sid, total: 0, last_seen: null, event_types: new Set() };
+        }
+        sourceMap[sid].total++;
+        sourceMap[sid].event_types.add(e.event_type);
+        if (!sourceMap[sid].last_seen || e.timestamp > sourceMap[sid].last_seen) {
+          sourceMap[sid].last_seen = e.timestamp;
+        }
+      }
+
+      // Compute approved count per source from enriched fused events
+      const sourceApproved = {};
+      const sourceTotal = {};
+      const sourceAnomalyCount = {};
+      for (const f of enrichedFused) {
+        const sources = f.sources || [];
+        for (const s of sources) {
+          const sid = s.source_id;
+          if (!sourceTotal[sid]) { sourceTotal[sid] = 0; sourceApproved[sid] = 0; sourceAnomalyCount[sid] = 0; }
+          sourceTotal[sid]++;
+          if (f.validation_status === 'verified') sourceApproved[sid]++;
+          if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) sourceAnomalyCount[sid]++;
+        }
+      }
+
+      const sources = Object.values(sourceMap);
+      if (sources.length === 0) return <Connecting label="source data" />;
+
       return (
         <table>
-          <thead><tr><th>Event ID</th><th>Sources</th><th>Object ID</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
+          <thead>
+            <tr><th>Source ID</th><th>Status</th><th>Trust Score</th><th>Events</th><th>Last Seen</th><th>Issues</th></tr>
+          </thead>
           <tbody>
-            {fused.slice(-20).reverse().map((f, i) => {
-              const srcCount = Array.isArray(f.sources) ? f.sources.length : '—';
-              const badgeCls = f.status === 'verified' ? 'badge-verified'
-                : f.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
-              const conf = f.confidence_score ?? f.confidence;
+            {sources.map((s, i) => {
+              const total = sourceTotal[s.source_id] || 0;
+              const approved = sourceApproved[s.source_id] || 0;
+              const trustScore = total > 0 ? approved / total : 0;
+              const anomalies = sourceAnomalyCount[s.source_id] || 0;
+              const now = Date.now();
+              const lastSeen = s.last_seen ? new Date(s.last_seen).getTime() : 0;
+              const isOnline = (now - lastSeen) < ONLINE_TIMEOUT_MS;
+              const trustColor = trustScore >= ANOMALY_HIGH_THRESHOLD ? '#34d399' : trustScore >= ANOMALY_ELEVATED_THRESHOLD ? '#f5c542' : '#f87171';
+              const hasIssues = anomalies > 0 || trustScore < 0.5;
+
               return (
-                <tr key={f.event_id || i}>
+                <tr key={s.source_id || i}>
+                  <td style={{ fontWeight: 600 }}>{s.source_id}</td>
+                  <td><span className={`badge ${isOnline ? 'badge-online' : 'badge-offline'}`}>{isOnline ? 'online' : 'offline'}</span></td>
+                  <td>
+                    <div className="progress" style={{ width: 60 }}>
+                      <div className="progress-fill" style={{ width: `${trustScore * 100}%`, background: trustColor }} />
+                    </div>
+                    <span style={{ marginLeft: 6, fontSize: '0.72rem', color: trustColor }}>{(trustScore * 100).toFixed(0)}%</span>
+                  </td>
+                  <td>{s.total}</td>
+                  <td className="c-dim">{fmtTime(s.last_seen)}</td>
+                  <td>
+                    {hasIssues
+                      ? <span className="issue-flag">{anomalies > 0 ? `${anomalies} anomalies` : 'low trust'}</span>
+                      : <span className="no-issue">—</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
+    }
+
+    /* ── Enriched Fused Events Panel ── */
+    function FusedEventsPanel({ enrichedFused, onSelect }) {
+      if (enrichedFused.length === 0) return <Connecting label="fused events" />;
+      return (
+        <table>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Object ID</th>
+              <th>Sources</th>
+              <th>Confidence</th>
+              <th>Validation</th>
+              <th>Consensus</th>
+              <th>Analytics</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {enrichedFused.slice(0, 30).map((f, i) => {
+              const srcCount = Array.isArray(f.sources) ? f.sources.length : '—';
+              const valCls = f.validation_status === 'verified' ? 'badge-verified'
+                : f.validation_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+              const conf = f.confidence_score ?? f.confidence;
+              const confColor = conf >= ANOMALY_HIGH_THRESHOLD ? '#34d399' : conf >= ANOMALY_ELEVATED_THRESHOLD ? '#f5c542' : '#f87171';
+              const consensus = f.consensus_reached;
+              const anaCls = f.analytics_result
+                ? (f.analytics_result.classification === 'critical' ? 'badge-critical'
+                  : f.analytics_result.classification === 'elevated' ? 'badge-elevated' : 'badge-normal')
+                : '';
+              return (
+                <tr key={f.event_id || i} onClick={() => onSelect && onSelect(f)}>
                   <td className="c-dim">{truncId(f.event_id)}</td>
-                  <td>{srcCount}</td>
                   <td>{f.object_id || '—'}</td>
-                  <td>{conf != null ? `${(conf * 100).toFixed(0)}%` : '—'}</td>
-                  <td><span className={`badge ${badgeCls}`}>{f.status || 'pending'}</span></td>
+                  <td>{srcCount}</td>
+                  <td>
+                    <span style={{ color: confColor, fontWeight: 600 }}>
+                      {conf != null ? `${(conf * 100).toFixed(0)}%` : '—'}
+                    </span>
+                  </td>
+                  <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
+                  <td style={{ textAlign: 'center' }}>
+                    {consensus === true ? <span className="c-green" title="Consensus reached">✔</span>
+                      : consensus === false ? <span className="c-red" title="No consensus">✖</span>
+                      : <span className="c-dim">—</span>}
+                  </td>
+                  <td>
+                    {f.analytics_result
+                      ? <span className={`badge ${anaCls}`}>{f.analytics_result.classification}</span>
+                      : <span className="c-dim">—</span>}
+                  </td>
                   <td className="c-dim">{fmtTime(f.timestamp)}</td>
                 </tr>
               );
@@ -239,7 +509,7 @@
         <table>
           <thead><tr><th>Event ID</th><th>Status</th><th>Votes</th><th>Consensus</th></tr></thead>
           <tbody>
-            {validations.slice(-20).reverse().map((v, i) => {
+            {validations.slice(0, 20).map((v, i) => {
               const badgeCls = v.status === 'verified' ? 'badge-verified'
                 : v.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
               const votes = v.votes || [];
@@ -270,15 +540,15 @@
     function AnalyticsPanel({ analytics }) {
       if (analytics.length === 0) return <Connecting label="analytics" />;
       const barColor = (score) => {
-        if (score >= 0.7) return '#f87171';
-        if (score >= 0.4) return '#fb923c';
+        if (score >= ANOMALY_HIGH_THRESHOLD) return '#f87171';
+        if (score >= ANOMALY_ELEVATED_THRESHOLD) return '#fb923c';
         return '#34d399';
       };
       return (
         <table>
           <thead><tr><th>Event ID</th><th>Classification</th><th>Anomaly Score</th><th>Factors</th></tr></thead>
           <tbody>
-            {analytics.slice(-20).reverse().map((a, i) => {
+            {analytics.slice(0, 20).map((a, i) => {
               const r = a.result || {};
               const cls = r.classification || 'normal';
               const badgeCls = cls === 'critical' ? 'badge-critical'
@@ -327,6 +597,177 @@
       );
     }
 
+    /* ── Simulation Controls ── */
+    function SimulationControls({ simState, onToggle }) {
+      return (
+        <div className="panel full-width" style={{ marginBottom: 0 }}>
+          <div className="panel-header">🧪 Fault Injection / Simulation Controls</div>
+          <div style={{ padding: '12px 16px', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              className={`sim-btn ${simState.corrupted ? 'active' : ''}`}
+              onClick={() => onToggle('corrupted')}
+            >
+              {simState.corrupted ? '⚠ Injecting Corrupted Data' : '💉 Inject Corrupted Data'}
+            </button>
+            <button
+              className={`sim-btn ${simState.anomaly ? 'active' : ''}`}
+              onClick={() => onToggle('anomaly')}
+            >
+              {simState.anomaly ? '⚠ High Anomaly Rate' : '📈 Increase Anomaly Rate'}
+            </button>
+            <span style={{ fontSize: '0.72rem', color: '#4b5563', marginLeft: 8 }}>
+              {(simState.corrupted || simState.anomaly)
+                ? 'Simulation active — watch rejected events increase and trust scores drop'
+                : 'Trigger fault scenarios to demonstrate zero-trust resilience'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Object Drilldown Modal ── */
+    function DrilldownModal({ event, events, enrichedFused, validations, analytics, onClose }) {
+      if (!event) return null;
+
+      // Find raw source events for this object
+      const rawForObject = events.filter(e => e.object_id === event.object_id);
+
+      // Find all fused events for this object
+      const fusedForObject = enrichedFused.filter(f => f.object_id === event.object_id);
+
+      // Find validation result for this specific event
+      const valResult = validations.find(v => v.event_id === event.event_id);
+
+      // Find analytics result for this specific event
+      const anaResult = analytics.find(a => a.event_id === event.event_id);
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🔍 Object Drilldown: {event.object_id}</h2>
+              <button className="modal-close" onClick={onClose}>✕ Close</button>
+            </div>
+
+            <div className="modal-section">
+              <h3>Event Details</h3>
+              <div className="detail-row">
+                <div className="detail-item">
+                  <div className="detail-label">Event ID</div>
+                  <div className="detail-value">{event.event_id}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Object ID</div>
+                  <div className="detail-value">{event.object_id}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Confidence Score</div>
+                  <div className="detail-value" style={{ color: event.confidence_score >= 0.7 ? '#34d399' : event.confidence_score >= 0.4 ? '#f5c542' : '#f87171' }}>
+                    {(event.confidence_score * 100).toFixed(0)}%
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Validation Status</div>
+                  <div className="detail-value">
+                    <span className={`badge badge-${event.validation_status}`}>{event.validation_status}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-section">
+              <h3>Raw Source Events ({rawForObject.length})</h3>
+              {rawForObject.length > 0 ? (
+                <table>
+                  <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Time</th></tr></thead>
+                  <tbody>
+                    {rawForObject.slice(-MAX_DRILLDOWN_ROWS).reverse().map((e, i) => (
+                      <tr key={e.event_id || i}>
+                        <td className="c-dim">{truncId(e.event_id)}</td>
+                        <td>{e.source_id}</td>
+                        <td>{e.event_type}</td>
+                        <td className="c-dim">{fmtTime(e.timestamp)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="connecting">No raw events found</div>}
+            </div>
+
+            <div className="modal-section">
+              <h3>Fused Event History ({fusedForObject.length})</h3>
+              {fusedForObject.length > 0 ? (
+                <table>
+                  <thead><tr><th>Event ID</th><th>Sources</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
+                  <tbody>
+                    {fusedForObject.slice(-MAX_DRILLDOWN_ROWS).reverse().map((f, i) => (
+                      <tr key={f.event_id || i}>
+                        <td className="c-dim">{truncId(f.event_id)}</td>
+                        <td>{(f.sources || []).length}</td>
+                        <td>{(f.confidence_score * 100).toFixed(0)}%</td>
+                        <td><span className={`badge badge-${f.validation_status}`}>{f.validation_status}</span></td>
+                        <td className="c-dim">{fmtTime(f.timestamp)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="connecting">No fused events</div>}
+            </div>
+
+            {valResult && (
+              <div className="modal-section">
+                <h3>Validation Votes</h3>
+                <table>
+                  <thead><tr><th>Validator</th><th>Vote</th><th>Hash (prefix)</th><th>Time</th></tr></thead>
+                  <tbody>
+                    {(valResult.votes || []).map((vote, vi) => (
+                      <tr key={vi}>
+                        <td className="c-dim">{truncId(vote.validator_id)}</td>
+                        <td>
+                          {vote.vote === 'approve'
+                            ? <span className="c-green">✓ approve</span>
+                            : <span className="c-red">✗ reject</span>}
+                        </td>
+                        <td className="c-dim">{vote.hash ? vote.hash.substring(0, 12) + '…' : '—'}</td>
+                        <td className="c-dim">{fmtTime(vote.timestamp)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: 8, fontSize: '0.78rem' }}>
+                  Consensus: {valResult.consensus_reached ? <span className="c-green">Reached</span> : <span className="c-red">Not reached</span>}
+                </div>
+              </div>
+            )}
+
+            {anaResult && (
+              <div className="modal-section">
+                <h3>Analytics Result</h3>
+                <div className="detail-row">
+                  <div className="detail-item">
+                    <div className="detail-label">Classification</div>
+                    <div className="detail-value">
+                      <span className={`badge badge-${anaResult.result.classification}`}>{anaResult.result.classification}</span>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">Anomaly Score</div>
+                    <div className="detail-value">{(anaResult.result.anomaly_score * 100).toFixed(0)}%</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">Factors</div>
+                    <div className="detail-value" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
+                      {(anaResult.result.factors || []).join(', ') || '—'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     /* ── Connecting placeholder ── */
     function Connecting({ label }) {
       return <div className="connecting">Connecting to {label}<span className="dot-pulse" /></div>;
@@ -339,14 +780,25 @@
       const [validations, setValidations] = useState([]);
       const [analytics, setAnalytics] = useState([]);
       const [logs, setLogs] = useState([]);
+      const [healthData, setHealthData] = useState([]);
+      const [selectedEvent, setSelectedEvent] = useState(null);
+      const [simState, setSimState] = useState({ corrupted: false, anomaly: false });
 
       const poll = useCallback(async () => {
         const safe = async (url) => {
           try { return await apiFetch(url); }
           catch { return null; }
         };
+        const safeHealth = async (service) => {
+          try {
+            await apiFetch(`/api/${service}/health`);
+            return { service, ok: true };
+          } catch {
+            return { service, ok: false };
+          }
+        };
 
-        const [evRes, fuRes, vaRes, anRes, logI, logF, logV, logA] = await Promise.all([
+        const [evRes, fuRes, vaRes, anRes, logI, logF, logV, logA, hIng, hFus, hVal, hAna] = await Promise.all([
           safe('/api/ingestion/events?limit=50'),
           safe('/api/fusion/fused-events?limit=50'),
           safe('/api/validation/validations?limit=50'),
@@ -355,12 +807,17 @@
           safe('/api/fusion/audit'),
           safe('/api/validation/audit'),
           safe('/api/analytics/audit'),
+          safeHealth('ingestion'),
+          safeHealth('fusion'),
+          safeHealth('validation'),
+          safeHealth('analytics'),
         ]);
 
         if (evRes) setEvents(Array.isArray(evRes) ? evRes : (evRes.events || []));
         if (fuRes) setFused(Array.isArray(fuRes) ? fuRes : (fuRes.events || fuRes.fusedEvents || []));
         if (vaRes) setValidations(Array.isArray(vaRes) ? vaRes : (vaRes.validations || []));
         if (anRes) setAnalytics(Array.isArray(anRes) ? anRes : (anRes.results || []));
+        setHealthData([hIng, hFus, hVal, hAna]);
 
         const merged = [
           ...((logI && (Array.isArray(logI) ? logI : logI.entries || [])) || []).map(e => ({ ...e, stage: e.stage || 'ingestion' })),
@@ -377,25 +834,89 @@
         return () => clearInterval(id);
       }, [poll]);
 
+      /* Simulation: inject corrupted/anomaly events directly via API */
+      const handleSimToggle = useCallback(async (type) => {
+        setSimState(prev => {
+          const next = { ...prev, [type]: !prev[type] };
+          if (!prev[type]) {
+            /* Send a burst of bad events when activating */
+            const objects = ['OBJ-001', 'OBJ-002', 'OBJ-003'];
+            const burst = type === 'corrupted'
+              ? objects.map(obj => ({
+                  source_id: 'sensor-beta',
+                  event_type: 'sensor',
+                  object_id: obj,
+                  timestamp: new Date().toISOString(),
+                  payload: { sensor_type: 'radar', reading: 999, threshold: 100, corrupted: true },
+                }))
+              : objects.map(obj => ({
+                  source_id: 'sensor-beta',
+                  event_type: 'anomaly',
+                  object_id: obj,
+                  timestamp: new Date().toISOString(),
+                  payload: { sensor_type: 'infrared', reading: 950, threshold: 200, anomaly_detected: true },
+                }));
+            burst.forEach(ev => {
+              fetch('/api/ingestion/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ev),
+              }).catch(() => {});
+            });
+            /* Also inject the satellite-alpha side so fusion triggers */
+            objects.forEach(obj => {
+              fetch('/api/ingestion/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  source_id: 'satellite-alpha',
+                  event_type: type === 'anomaly' ? 'anomaly' : 'tracking',
+                  object_id: obj,
+                  timestamp: new Date().toISOString(),
+                  payload: { latitude: 0, longitude: 0, altitude: 400, velocity: 2, heading: 90 },
+                }),
+              }).catch(() => {});
+            });
+          }
+          return next;
+        });
+      }, []);
+
+      const enrichedFused = useMemo(
+        () => enrichFusedEvents(fused, validations, analytics),
+        [fused, validations, analytics]
+      );
+
       return (
         <div className="app">
           <header className="header">
             <h1>🛰 Trusted Fusion Gateway</h1>
-            <p>Zero-Trust Multi-Source Data Fusion System</p>
+            <p>Zero-Trust Multi-Source Data Fusion — Decision Support System</p>
           </header>
 
-          <StatsBar events={events} fused={fused} validations={validations} analytics={analytics} />
-          <PipelineFlow events={events} fused={fused} validations={validations} analytics={analytics} />
+          <MissionStatus enrichedFused={enrichedFused} events={events} healthData={healthData} />
+          <DataFlowHealth events={events} fused={fused} validations={validations} analytics={analytics} healthData={healthData} />
 
           <div className="grid">
-            <div className="panel">
-              <div className="panel-header"><span className="c-blue">●</span> Raw Events</div>
-              <div className="panel-body"><RawEventsPanel events={events} /></div>
+            {/* Priority Events — full width, top */}
+            <div className="panel full-width panel-priority">
+              <div className="panel-header"><span className="c-red">🚨</span> Priority Events</div>
+              <div className="panel-body"><PriorityEventsPanel enrichedFused={enrichedFused} /></div>
             </div>
-            <div className="panel">
-              <div className="panel-header"><span className="c-purple">●</span> Fused Events</div>
-              <div className="panel-body"><FusedEventsPanel fused={fused} /></div>
+
+            {/* Source Health */}
+            <div className="panel full-width">
+              <div className="panel-header"><span className="c-blue">🛰️</span> Source Health &amp; Trust</div>
+              <div className="panel-body"><SourceHealthPanel events={events} enrichedFused={enrichedFused} /></div>
             </div>
+
+            {/* Enriched Fused Events — full width */}
+            <div className="panel full-width">
+              <div className="panel-header"><span className="c-purple">●</span> Fused Events (Enriched)</div>
+              <div className="panel-body"><FusedEventsPanel enrichedFused={enrichedFused} onSelect={setSelectedEvent} /></div>
+            </div>
+
+            {/* Validation & Analytics side by side */}
             <div className="panel">
               <div className="panel-header"><span className="c-orange">●</span> Validation Status</div>
               <div className="panel-body"><ValidationPanel validations={validations} /></div>
@@ -404,11 +925,28 @@
               <div className="panel-header"><span className="c-green">●</span> Analytics Output</div>
               <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
             </div>
+
+            {/* Simulation Controls */}
+            <SimulationControls simState={simState} onToggle={handleSimToggle} />
+
+            {/* Audit Log */}
             <div className="panel full-width">
               <div className="panel-header">📋 Audit Log</div>
               <div className="panel-body"><AuditLogPanel logs={logs} /></div>
             </div>
           </div>
+
+          {/* Object Drilldown Modal */}
+          {selectedEvent && (
+            <DrilldownModal
+              event={selectedEvent}
+              events={events}
+              enrichedFused={enrichedFused}
+              validations={validations}
+              analytics={analytics}
+              onClose={() => setSelectedEvent(null)}
+            />
+          )}
         </div>
       );
     }
