@@ -48,7 +48,9 @@
       --sim-panel-border: #f9a8d4;
       --table-row-hover: #f3f4f6;
       --badge-zt-bg: #d1fae5;
+      --badge-zt-color: #059669;
       --badge-sandbox-bg: #ede9fe;
+      --badge-sandbox-color: #6d28d9;
       --modal-overlay: rgba(0,0,0,0.4);
     }
 
@@ -208,7 +210,7 @@
     .badge-zt {
       display: inline-block; padding: 1px 6px; border-radius: 8px;
       font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;
-      background: var(--badge-zt-bg); color: #059669; border: 1px solid #065f46;
+      background: var(--badge-zt-bg); color: var(--badge-zt-color, #34d399); border: 1px solid #065f46;
     }
     .badge-zt-fail {
       background: #2a0e0e; color: #f87171; border: 1px solid #7f1d1d;
@@ -216,7 +218,7 @@
     .badge-sandbox {
       display: inline-block; padding: 1px 6px; border-radius: 8px;
       font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;
-      background: var(--badge-sandbox-bg); color: #7c3aed; border: 1px solid #5b21b6;
+      background: var(--badge-sandbox-bg); color: var(--badge-sandbox-color, #a78bfa); border: 1px solid #5b21b6;
     }
 
     /* ── Progress Bar ── */
@@ -857,6 +859,7 @@
     function AuditLogPanel({ logs }) {
       const containerRef = useRef(null);
       const wasAtBottomRef = useRef(true);
+      const AUTO_SCROLL_THRESHOLD = 30;
       useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
@@ -867,8 +870,7 @@
       const handleScroll = () => {
         const el = containerRef.current;
         if (!el) return;
-        const threshold = 30;
-        wasAtBottomRef.current = (el.scrollHeight - el.scrollTop - el.clientHeight) < threshold;
+        wasAtBottomRef.current = (el.scrollHeight - el.scrollTop - el.clientHeight) < AUTO_SCROLL_THRESHOLD;
       };
       const stageColor = { ingestion: 'c-blue', fusion: 'c-purple', validation: 'c-orange', analytics: 'c-green' };
       if (logs.length === 0) return <Connecting label="audit logs" />;
@@ -900,10 +902,12 @@
       };
       const hasAvailable = tools.some(t => t.status === 'AVAILABLE');
       const loadNewTool = () => {
-        const num = tools.filter(t => t.vendor !== 'Internal').length + 1;
+        const VENDOR_LETTERS = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+        const externalCount = tools.filter(t => t.vendor !== 'Internal').length;
+        const letter = VENDOR_LETTERS[externalCount] || `X${externalCount}`;
         const newTool = {
           name: `custom-analytics-${Date.now().toString(36).slice(-4)}`,
-          vendor: `Vendor-${String.fromCharCode(64 + num + 2)}`,
+          vendor: `Vendor-${letter}`,
           status: 'AVAILABLE',
           sandboxed: false,
           inputPolicy: null,
