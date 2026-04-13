@@ -446,18 +446,18 @@
     function SimulationControls({ simState, onToggle }) {
       return (
         <div className="sim-panel">
-          <div className="sim-panel-header">\ud83e\uddea Fault Injection Controls</div>
+          <div className="sim-panel-header">🧪 Fault Injection Controls</div>
           <button className={`sim-btn ${simState.corrupted ? 'active' : ''}`}
             onClick={() => onToggle('corrupted')}>
-            {simState.corrupted ? '\u26a0 Injecting Corrupted Data' : '\ud83d\udc89 Inject Corrupted Data'}
+            {simState.corrupted ? '⚠ Injecting Corrupted Data' : '💉 Inject Corrupted Data'}
           </button>
           <button className={`sim-btn ${simState.anomaly ? 'active' : ''}`}
             onClick={() => onToggle('anomaly')}>
-            {simState.anomaly ? '\u26a0 High Anomaly Rate' : '\ud83d\udcc8 Increase Anomaly Rate'}
+            {simState.anomaly ? '⚠ High Anomaly Rate' : '📈 Increase Anomaly Rate'}
           </button>
           <div className="sim-status">
             {(simState.corrupted || simState.anomaly)
-              ? '\u26a0 Simulation active \u2014 watch metrics react'
+              ? '⚠ Simulation active — watch metrics react'
               : 'Trigger fault scenarios to test resilience'}
           </div>
         </div>
@@ -819,7 +819,7 @@
         <div>
           <div className="analyst-grid">
             <div className="analyst-card">
-              <div className="analyst-card-title">\ud83d\udccb Validation Metrics</div>
+              <div className="analyst-card-title">📋 Validation Metrics</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Verified</span>
                 <span className="analyst-metric-value c-green">{verifiedPct}%</span>
@@ -839,7 +839,7 @@
               <div className="time-context" style={{ marginTop: 8 }}>Based on last 60 seconds of data</div>
             </div>
             <div className="analyst-card">
-              <div className="analyst-card-title">\ud83d\udd17 Fusion Metrics</div>
+              <div className="analyst-card-title">🔗 Fusion Metrics</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Avg Confidence</span>
                 <span className="analyst-metric-value" style={{ color: '#a78bfa' }}>{avgConfidence}%</span>
@@ -851,7 +851,7 @@
               <div className="time-context" style={{ marginTop: 8 }}>Based on last 60 seconds of data</div>
             </div>
             <div className="analyst-card">
-              <div className="analyst-card-title">\ud83d\udcca Analytics Distribution</div>
+              <div className="analyst-card-title">📊 Analytics Distribution</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Normal</span>
                 <span className="analyst-metric-value c-green">{normalPct}%</span>
@@ -897,7 +897,7 @@
         <div className="modal-overlay" onClick={onClose}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>\ud83d\udd0d Object Drilldown: {event.object_id}</h2>
+              <h2>🔍 Object Drilldown: {event.object_id}</h2>
               <button className="modal-close" onClick={onClose}>\u2715 Close</button>
             </div>
             <div className="modal-section">
@@ -1130,7 +1130,7 @@
       return (
         <div className="app">
           <header className="header">
-            <h1>\ud83d\udef0 Trusted Fusion Gateway</h1>
+            <h1>🛰 Trusted Fusion Gateway</h1>
             <p>Zero-Trust Multi-Source Data Fusion \u2014 Decision Support Platform</p>
             <div className="live-indicator">
               <span className="live-dot"></span>
@@ -1147,7 +1147,7 @@
             <button className={`view-toggle-btn ${activeView === 'command' ? 'active' : ''}`}
               onClick={() => setActiveView('command')}>\u26a1 Command View</button>
             <button className={`view-toggle-btn ${activeView === 'analyst' ? 'active' : ''}`}
-              onClick={() => setActiveView('analyst')}>\ud83d\udcca Analyst View</button>
+              onClick={() => setActiveView('analyst')}>📊 Analyst View</button>
           </div>
 
           <div className="top-bar">
@@ -1165,7 +1165,7 @@
             <div className="grid">
               <div className="panel full-width panel-priority">
                 <div className="panel-header">
-                  <span className="c-red">\ud83d\udea8</span> Priority Events
+                  <span className="c-red">🚨</span> Priority Events
                   <span className="panel-header-right">Last 60 seconds</span>
                 </div>
                 <div className="panel-body"><PriorityEventsPanel enrichedFused={enrichedFused} /></div>
@@ -1173,7 +1173,7 @@
 
               <div className="panel full-width">
                 <div className="panel-header">
-                  <span className="c-blue">\ud83d\udef0\ufe0f</span> Source Health &amp; Trust (Multi-Vendor)
+                  <span className="c-blue">🛰️</span> Source Health &amp; Trust (Multi-Vendor)
                   <span className="panel-header-right">
                     Last 5 minutes
                     <button className="onboard-btn" style={{ marginLeft: 10 }} onClick={handleAddSource}>+ Add New Data Source</button>
@@ -1204,11 +1204,11 @@
               </div>
 
               <div className="panel">
-                <div className="panel-header"><span className="c-purple">\ud83e\uddea</span> Analytics Tools / Sandbox Environment</div>
+                <div className="panel-header"><span className="c-purple">🧪</span> Analytics Tools / Sandbox Environment</div>
                 <div className="panel-body"><AnalyticsSandboxPanel /></div>
               </div>
               <div className="panel">
-                <div className="panel-header">\ud83d\udccb Audit Log</div>
+                <div className="panel-header">📋 Audit Log</div>
                 <div className="panel-body"><AuditLogPanel logs={logs} /></div>
               </div>
             </div>
