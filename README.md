@@ -206,6 +206,61 @@ Two simulated producers emit JSON events:
 - Shows: raw events, fused events, validation status, analytics output, audit logs
 - Color-coded status badges and source indicators
 - Auto-refreshes every 2 seconds
+- Light and dark theme toggle
+
+#### Dashboard Views
+
+The dashboard offers two distinct views, toggled via the **Command View** / **Analyst View** buttons at the top of the page. Both views share the same live data stream, system status bar, fault injection controls, and data-flow health indicators. The difference is in how information is presented and what actions are available.
+
+##### ⚡ Command View
+
+The Command View is designed for **operators and decision-makers** who need real-time situational awareness at a glance. It is the default view when the dashboard loads.
+
+![Command View Screenshot](https://github.com/user-attachments/assets/c08125cd-6676-49d0-bdc2-2bbdf239f2f3)
+
+What you see in Command View:
+
+| Panel | Description |
+|-------|-------------|
+| **🚨 Priority Events** | Full-width panel highlighting rejected, elevated, and critical events that need immediate attention |
+| **🛰️ Source Health & Trust** | Multi-vendor source health, trust scores, and the ability to onboard new data sources on the fly |
+| **● Fused Events (Enriched)** | Detailed table of every fused event with validation status, confidence, anomaly scores, and a drill-down modal for per-object investigation |
+| **● Validation Status** | Event-by-event validation results with individual validator votes (approve/reject) and consensus outcome |
+| **● Analytics Output** | Classification results (normal / elevated / critical), anomaly scores, and contributing factors for each event |
+| **🧪 Analytics Tools / Sandbox** | Load and manage sandboxed analytics tools |
+| **📋 Audit Log** | Chronological audit trail across all pipeline stages |
+| **📡 Raw Events** | Unprocessed events as received from data sources |
+
+All data panels in Command View include **CSV / JSON export** buttons for offline analysis.
+
+##### 📊 Analyst View
+
+The Analyst View is designed for **analysts and quality reviewers** who need aggregate metrics and statistical summaries rather than individual event details.
+
+![Analyst View Screenshot](https://github.com/user-attachments/assets/8cb666ac-4f70-4489-972f-e6447fed3be1)
+
+What you see in Analyst View:
+
+| Section | Metrics |
+|---------|---------|
+| **📋 Validation Metrics** | Verified %, Rejected %, Pending %, and Consensus Success Rate — summarizing overall data integrity health |
+| **🔗 Fusion Metrics** | Average Confidence score across all fused events, and Average Sources per Event — measuring fusion quality |
+| **📊 Analytics Distribution** | Breakdown of classifications into Normal %, Elevated %, and Critical % — showing the threat/anomaly landscape |
+| **● Validation Status** | Same per-event validation table as Command View for reference |
+| **● Analytics Output** | Same per-event analytics table as Command View for reference |
+
+All metrics in Analyst View are computed over the **last 60 seconds** of live data and update automatically.
+
+##### When to Use Each View
+
+| Scenario | Recommended View |
+|----------|-----------------|
+| Monitoring a live mission or exercise | ⚡ Command View |
+| Investigating a specific rejected or elevated event | ⚡ Command View (use the drill-down modal) |
+| Reviewing overall system health and data quality trends | 📊 Analyst View |
+| Briefing leadership on pipeline performance | 📊 Analyst View |
+| Testing fault injection (corrupted data, anomaly bursts) | ⚡ Command View |
+| Exporting data for reports | ⚡ Command View (export buttons) |
 
 ## Testing
 
