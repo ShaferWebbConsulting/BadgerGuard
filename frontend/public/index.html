@@ -8,24 +8,68 @@
   <script src="/react-dom.production.min.js"></script>
   <script src="/babel.min.js"></script>
   <style>
+    /* ── Theme Variables ── */
+    :root {
+      --bg-body: #0b0e14;
+      --bg-panel: #141820;
+      --bg-panel-header: #111520;
+      --bg-input: #1a1e28;
+      --border-panel: #1e2230;
+      --border-accent: #3a3f4b;
+      --text-primary: #e0e4ec;
+      --text-secondary: #c8ccd4;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --text-dimmer: #4b5563;
+      --scrollbar-track: #1a1e28;
+      --scrollbar-thumb: #3a3f4b;
+      --sim-panel-bg: #1a1520;
+      --sim-panel-border: #4a2040;
+      --table-row-hover: #181c26;
+      --badge-zt-bg: #0e2a1e;
+      --badge-sandbox-bg: #1e1a30;
+      --modal-overlay: rgba(0,0,0,0.7);
+    }
+    [data-theme="light"] {
+      --bg-body: #f3f4f6;
+      --bg-panel: #ffffff;
+      --bg-panel-header: #f9fafb;
+      --bg-input: #e5e7eb;
+      --border-panel: #d1d5db;
+      --border-accent: #9ca3af;
+      --text-primary: #111827;
+      --text-secondary: #1f2937;
+      --text-muted: #4b5563;
+      --text-dim: #6b7280;
+      --text-dimmer: #9ca3af;
+      --scrollbar-track: #e5e7eb;
+      --scrollbar-thumb: #9ca3af;
+      --sim-panel-bg: #fdf2f8;
+      --sim-panel-border: #f9a8d4;
+      --table-row-hover: #f3f4f6;
+      --badge-zt-bg: #d1fae5;
+      --badge-sandbox-bg: #ede9fe;
+      --modal-overlay: rgba(0,0,0,0.4);
+    }
+
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #0b0e14;
-      color: #c8ccd4;
+      background: var(--bg-body);
+      color: var(--text-secondary);
       line-height: 1.5;
       min-height: 100vh;
     }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1a1e28; }
-    ::-webkit-scrollbar-thumb { background: #3a3f4b; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 
     /* ── Layout ── */
     .app { max-width: 1440px; margin: 0 auto; padding: 16px 24px 32px; }
-    .header { text-align: center; padding: 20px 0 12px; border-bottom: 1px solid #1e2230; margin-bottom: 16px; position: relative; }
-    .header h1 { font-size: 1.6rem; color: #e0e4ec; letter-spacing: 1px; }
-    .header p { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
+    .header { text-align: center; padding: 20px 0 12px; border-bottom: 1px solid var(--border-panel); margin-bottom: 16px; position: relative; }
+    .header h1 { font-size: 1.6rem; color: var(--text-primary); letter-spacing: 1px; }
+    .header p { font-size: 0.82rem; color: var(--text-dim); margin-top: 2px; }
 
     /* ── Live Indicator ── */
     .live-indicator {
@@ -48,7 +92,7 @@
     .view-toggle-btn {
       padding: 8px 24px; font-size: 0.82rem; font-weight: 700;
       text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-      border: 1px solid #3a3f4b; background: #1a1e28; color: #6b7280;
+      border: 1px solid var(--border-accent); background: var(--bg-input); color: var(--text-dim);
       transition: all 0.2s;
     }
     .view-toggle-btn:first-child { border-radius: 8px 0 0 8px; }
@@ -66,10 +110,10 @@
 
     /* ── Mission Status ── */
     .mission-status {
-      background: #141820; border: 1px solid #1e2230; border-radius: 10px;
+      background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 10px;
       padding: 16px 20px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; height: 100%;
     }
-    .mission-status-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; }
+    .mission-status-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
     .mission-status-value { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
     .mission-status-item { text-align: center; min-width: 100px; }
     .system-badge {
@@ -79,10 +123,10 @@
     .system-operational { background: #163024; color: #34d399; border: 1px solid #059669; }
     .system-degraded { background: #3b3118; color: #f5c542; border: 1px solid #ca8a04; }
     .status-reason {
-      font-size: 0.7rem; color: #9ca3af; margin-top: 4px; max-width: 200px;
+      font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; max-width: 200px;
     }
     .time-context {
-      font-size: 0.6rem; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;
+      font-size: 0.6rem; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;
     }
     .trend-indicator { font-size: 0.72rem; margin-left: 4px; }
     .trend-up { color: #f87171; }
@@ -91,7 +135,7 @@
 
     /* ── Fault Injection Controls ── */
     .sim-panel {
-      background: #1a1520; border: 1px solid #4a2040; border-radius: 10px;
+      background: var(--sim-panel-bg); border: 1px solid var(--sim-panel-border); border-radius: 10px;
       padding: 12px 16px; height: 100%;
       display: flex; flex-direction: column; gap: 8px;
     }
@@ -100,13 +144,13 @@
       letter-spacing: 1px; color: #fb923c; display: flex; align-items: center; gap: 6px;
     }
     .sim-btn {
-      padding: 8px 16px; border-radius: 8px; border: 1px solid #3a3f4b;
-      background: #1a1e28; color: #c8ccd4; font-size: 0.78rem; font-weight: 600;
+      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-accent);
+      background: var(--bg-input); color: var(--text-secondary); font-size: 0.78rem; font-weight: 600;
       cursor: pointer; transition: background 0.2s, border-color 0.2s; width: 100%;
     }
-    .sim-btn:hover { background: #252a36; border-color: #60a5fa; }
+    .sim-btn:hover { background: var(--table-row-hover); border-color: #60a5fa; }
     .sim-btn.active { background: #301a1a; border-color: #f87171; color: #f87171; }
-    .sim-status { font-size: 0.68rem; color: #4b5563; }
+    .sim-status { font-size: 0.68rem; color: var(--text-dimmer); }
 
     /* ── Pipeline Flow ── */
     .pipeline { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 18px; flex-wrap: wrap; }
@@ -114,33 +158,33 @@
       padding: 10px 22px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
       border: 1px solid; text-align: center; min-width: 110px;
     }
-    .pipeline-arrow { font-size: 1.3rem; color: #3a3f4b; padding: 0 6px; }
+    .pipeline-arrow { font-size: 1.3rem; color: var(--border-accent); padding: 0 6px; }
 
     /* ── Panels ── */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     .panel {
-      background: #141820; border: 1px solid #1e2230; border-radius: 10px;
+      background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 10px;
       overflow: hidden; display: flex; flex-direction: column;
     }
     .panel-priority { border-color: #7f1d1d; }
     .panel-header {
       padding: 10px 16px; font-size: 0.82rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #1e2230;
+      text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border-panel);
       display: flex; align-items: center; gap: 8px;
     }
     .panel-header-right {
       margin-left: auto; font-size: 0.65rem; font-weight: 400;
-      text-transform: none; color: #4b5563; letter-spacing: 0;
+      text-transform: none; color: var(--text-dimmer); letter-spacing: 0;
     }
     .panel-body { padding: 0; overflow-y: auto; max-height: 340px; }
     .full-width { grid-column: 1 / -1; }
 
     /* ── Tables ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-    th { background: #111520; padding: 8px 12px; text-align: left; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
-    td { padding: 7px 12px; border-top: 1px solid #1a1e28; white-space: nowrap; }
-    tr:hover td { background: #181c26; cursor: pointer; }
+    th { background: var(--bg-panel-header); padding: 8px 12px; text-align: left; color: var(--text-dim); font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
+    td { padding: 7px 12px; border-top: 1px solid var(--bg-input); white-space: nowrap; }
+    tr:hover td { background: var(--table-row-hover); cursor: pointer; }
 
     /* ── Priority row highlights ── */
     tr.priority-rejected td { background: #2a1010; border-left: 3px solid #f87171; }
@@ -164,7 +208,7 @@
     .badge-zt {
       display: inline-block; padding: 1px 6px; border-radius: 8px;
       font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;
-      background: #0e2a1e; color: #34d399; border: 1px solid #065f46;
+      background: var(--badge-zt-bg); color: #059669; border: 1px solid #065f46;
     }
     .badge-zt-fail {
       background: #2a0e0e; color: #f87171; border: 1px solid #7f1d1d;
@@ -172,19 +216,19 @@
     .badge-sandbox {
       display: inline-block; padding: 1px 6px; border-radius: 8px;
       font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;
-      background: #1e1a30; color: #a78bfa; border: 1px solid #5b21b6;
+      background: var(--badge-sandbox-bg); color: #7c3aed; border: 1px solid #5b21b6;
     }
 
     /* ── Progress Bar ── */
-    .progress { background: #1a1e28; border-radius: 4px; height: 8px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; }
+    .progress { background: var(--bg-input); border-radius: 4px; height: 8px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; }
     .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
 
     /* ── Audit Log ── */
-    .log-entry { padding: 5px 14px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.72rem; border-top: 1px solid #1a1e28; display: flex; gap: 10px; }
+    .log-entry { padding: 5px 14px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.72rem; border-top: 1px solid var(--bg-input); display: flex; gap: 10px; }
     .log-entry:first-child { border-top: none; }
-    .log-ts { color: #4b5563; min-width: 75px; flex-shrink: 0; }
+    .log-ts { color: var(--text-dimmer); min-width: 75px; flex-shrink: 0; }
     .log-stage { font-weight: 600; min-width: 80px; flex-shrink: 0; }
-    .log-msg { color: #9ca3af; word-break: break-word; white-space: normal; }
+    .log-msg { color: var(--text-muted); word-break: break-word; white-space: normal; }
 
     /* ── Colors ── */
     .c-blue { color: #60a5fa; }
@@ -193,40 +237,40 @@
     .c-orange { color: #fb923c; }
     .c-red { color: #f87171; }
     .c-yellow { color: #f5c542; }
-    .c-dim { color: #4b5563; }
+    .c-dim { color: var(--text-dimmer); }
 
-    .connecting { text-align: center; padding: 28px 16px; color: #4b5563; font-size: 0.82rem; }
+    .connecting { text-align: center; padding: 28px 16px; color: var(--text-dimmer); font-size: 0.82rem; }
     .dot-pulse::after { content: '...'; animation: dots 1.4s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
 
     /* ── Drilldown Modal ── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
+      position: fixed; inset: 0; background: var(--modal-overlay); z-index: 100;
       display: flex; align-items: center; justify-content: center;
     }
     .modal-content {
-      background: #141820; border: 1px solid #1e2230; border-radius: 12px;
+      background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 12px;
       width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto; padding: 20px;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #1e2230;
+      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-panel);
     }
-    .modal-header h2 { font-size: 1.1rem; color: #e0e4ec; }
+    .modal-header h2 { font-size: 1.1rem; color: var(--text-primary); }
     .modal-close {
-      background: none; border: 1px solid #3a3f4b; color: #9ca3af; border-radius: 6px;
+      background: none; border: 1px solid var(--border-accent); color: var(--text-muted); border-radius: 6px;
       padding: 4px 12px; cursor: pointer; font-size: 0.82rem;
     }
     .modal-close:hover { border-color: #f87171; color: #f87171; }
     .modal-section { margin-bottom: 16px; }
     .modal-section h3 {
-      font-size: 0.82rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px;
+      font-size: 0.82rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px;
       margin-bottom: 8px;
     }
     .detail-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
     .detail-item { flex: 1 1 180px; }
-    .detail-label { font-size: 0.68rem; color: #4b5563; text-transform: uppercase; }
-    .detail-value { font-size: 0.88rem; color: #e0e4ec; margin-top: 2px; }
+    .detail-label { font-size: 0.68rem; color: var(--text-dimmer); text-transform: uppercase; }
+    .detail-value { font-size: 0.88rem; color: var(--text-primary); margin-top: 2px; }
 
     /* ── Issue flag ── */
     .issue-flag { color: #f87171; font-weight: 600; }
@@ -238,26 +282,26 @@
     }
     @media (max-width: 900px) { .analyst-grid { grid-template-columns: 1fr; } }
     .analyst-card {
-      background: #141820; border: 1px solid #1e2230; border-radius: 10px; padding: 16px 20px;
+      background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 10px; padding: 16px 20px;
     }
     .analyst-card-title {
-      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
       margin-bottom: 12px; font-weight: 700;
     }
     .analyst-metric {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 6px 0; border-bottom: 1px solid #1a1e28;
+      padding: 6px 0; border-bottom: 1px solid var(--bg-input);
     }
     .analyst-metric:last-child { border-bottom: none; }
-    .analyst-metric-label { font-size: 0.78rem; color: #9ca3af; }
+    .analyst-metric-label { font-size: 0.78rem; color: var(--text-muted); }
     .analyst-metric-value { font-size: 1rem; font-weight: 700; }
 
     /* ── Sandbox Panel ── */
     .sandbox-tool {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 12px; background: #111520; border-radius: 6px; margin-bottom: 6px;
+      padding: 8px 12px; background: var(--bg-panel-header); border-radius: 6px; margin-bottom: 6px;
     }
-    .sandbox-tool-name { font-size: 0.78rem; font-weight: 600; color: #e0e4ec; }
+    .sandbox-tool-name { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); }
     .sandbox-tool-status { font-size: 0.68rem; }
     .onboard-btn {
       padding: 6px 14px; border-radius: 8px; border: 1px solid #059669;
@@ -268,6 +312,27 @@
 
     /* ── Source stale/dim ── */
     .source-stale { opacity: 0.5; }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .theme-toggle-btn {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-accent);
+      background: var(--bg-input); color: var(--text-secondary); font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+    }
+    .theme-toggle-btn:hover { border-color: #60a5fa; }
+
+    /* ── Export Button ── */
+    .export-btn {
+      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-accent);
+      background: var(--bg-input); color: var(--text-muted); font-size: 0.65rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .export-btn:hover { border-color: #60a5fa; color: #60a5fa; }
   </style>
 </head>
 <body>
@@ -291,12 +356,62 @@
     const vendorName = (sid) => VENDOR_NAMES[sid] || sid;
 
     /* Helpers */
-    const truncId = (id) => id ? id.substring(0, 8) : '\u2014';
+    const truncId = (id) => id ? id.substring(0, 8) : '—';
     const fmtTime = (ts) => {
-      if (!ts) return '\u2014';
+      if (!ts) return '—';
       try { return new Date(ts).toLocaleTimeString(); }
-      catch { return '\u2014'; }
+      catch { return '—'; }
     };
+
+    /* Export helpers */
+    function downloadJSON(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    function downloadCSV(data, filename) {
+      if (!data || data.length === 0) return;
+      const flat = data.map(item => {
+        const row = {};
+        for (const [k, v] of Object.entries(item)) {
+          row[k] = typeof v === 'object' ? JSON.stringify(v) : v;
+        }
+        return row;
+      });
+      const headers = Object.keys(flat[0]);
+      const csvRows = [headers.join(',')];
+      for (const row of flat) {
+        csvRows.push(headers.map(h => {
+          const val = String(row[h] ?? '');
+          return val.includes(',') || val.includes('"') || val.includes('\n')
+            ? `"${val.replace(/"/g, '""')}"` : val;
+        }).join(','));
+      }
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function ExportButtons({ data, baseName }) {
+      return (
+        <span style={{ display: 'inline-flex', gap: 4, marginLeft: 8 }}>
+          <button className="export-btn" onClick={() => downloadJSON(data, `${baseName}.json`)} title="Export JSON">JSON ↓</button>
+          <button className="export-btn" onClick={() => downloadCSV(data, `${baseName}.csv`)} title="Export CSV">CSV ↓</button>
+        </span>
+      );
+    }
     const secsAgo = (ts) => {
       if (!ts) return null;
       const diff = Math.round((Date.now() - new Date(ts).getTime()) / 1000);
@@ -343,9 +458,9 @@
     }
 
     function TrendArrow({ trend, goodWhenUp }) {
-      if (trend === 'up') return <span className={`trend-indicator ${goodWhenUp ? 'trend-down' : 'trend-up'}`}>\u2191</span>;
-      if (trend === 'down') return <span className={`trend-indicator ${goodWhenUp ? 'trend-up' : 'trend-down'}`}>\u2193</span>;
-      return <span className="trend-indicator trend-stable">\u2192</span>;
+      if (trend === 'up') return <span className={`trend-indicator ${goodWhenUp ? 'trend-down' : 'trend-up'}`}>↑</span>;
+      if (trend === 'down') return <span className={`trend-indicator ${goodWhenUp ? 'trend-up' : 'trend-down'}`}>↓</span>;
+      return <span className="trend-indicator trend-stable">→</span>;
     }
 
     /* Mission Status Panel */
@@ -421,7 +536,7 @@
             const ok = h ? h.ok : s.count > 0;
             return (
               <React.Fragment key={s.name}>
-                {i > 0 && <span className="pipeline-arrow">\u2192</span>}
+                {i > 0 && <span className="pipeline-arrow">→</span>}
                 <div className="pipeline-node" style={{
                     borderColor: ok ? s.border : '#7f1d1d',
                     color: ok ? s.color : '#f87171',
@@ -429,7 +544,7 @@
                   }}>
                   {s.name}
                   <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: 2, opacity: 0.8 }}>
-                    {ok ? '\u25cf online' : '\u25cf offline'}
+                    {ok ? '● online' : '● offline'}
                   </div>
                   <div style={{ fontSize: '0.6rem', fontWeight: 400, marginTop: 1, color: '#4b5563' }}>
                     {s.count} events
@@ -473,7 +588,7 @@
         return false;
       });
       if (priorityEvents.length === 0) {
-        return <div className="connecting" style={{ color: '#34d399' }}>No priority events \u2014 system nominal</div>;
+        return <div className="connecting" style={{ color: '#34d399' }}>No priority events — system nominal</div>;
       }
       const getReason = (f) => {
         const reasons = [];
@@ -489,9 +604,9 @@
       };
       const getAction = (f) => {
         if (f.validation_status === 'rejected') return 'Investigate source data integrity';
-        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate \u2014 manual review required';
-        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Quarantine \u2014 verify source health';
-        return 'Monitor \u2014 review if persists';
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate — manual review required';
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Quarantine — verify source health';
+        return 'Monitor — review if persists';
       };
       const getRowClass = (f) => {
         if (f.validation_status === 'rejected') return 'priority-rejected';
@@ -499,8 +614,8 @@
         return '';
       };
       const getIcon = (f) => {
-        if (f.validation_status === 'rejected') return '\u2716 ';
-        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) return '\u26a0\ufe0f ';
+        if (f.validation_status === 'rejected') return '✖ ';
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) return '⚠️ ';
         return '';
       };
       return (
@@ -518,7 +633,7 @@
                 : '';
               return (
                 <tr key={f.event_id || i} className={getRowClass(f)}>
-                  <td>{getIcon(f)}{f.object_id || '\u2014'}</td>
+                  <td>{getIcon(f)}{f.object_id || '—'}</td>
                   <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
                   <td>
                     {f.validation_status === 'verified'
@@ -530,7 +645,7 @@
                   <td>
                     {f.analytics_result
                       ? <span className={`badge ${anaCls}`}>{f.analytics_result.classification}</span>
-                      : <span className="c-dim">\u2014</span>}
+                      : <span className="c-dim">—</span>}
                   </td>
                   <td style={{ whiteSpace: 'normal', maxWidth: 200, fontSize: '0.72rem', color: '#fb923c' }}>{getReason(f)}</td>
                   <td style={{ whiteSpace: 'normal', maxWidth: 200, fontSize: '0.72rem', color: '#9ca3af' }}>{getAction(f)}</td>
@@ -612,7 +727,7 @@
                   <td>
                     {hasIssues
                       ? <span className="issue-flag">{anomalies > 0 ? `${anomalies} anomalies` : 'low trust'}</span>
-                      : <span className="no-issue">\u2014</span>}
+                      : <span className="no-issue">—</span>}
                   </td>
                 </tr>
               );
@@ -632,7 +747,7 @@
           </tr></thead>
           <tbody>
             {enrichedFused.slice(0, 30).map((f, i) => {
-              const srcCount = Array.isArray(f.sources) ? f.sources.length : '\u2014';
+              const srcCount = Array.isArray(f.sources) ? f.sources.length : '—';
               const valCls = f.validation_status === 'verified' ? 'badge-verified'
                 : f.validation_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
               const conf = f.confidence_score ?? f.confidence;
@@ -644,21 +759,21 @@
               return (
                 <tr key={f.event_id || i} onClick={() => onSelect && onSelect(f)}>
                   <td className="c-dim">{truncId(f.event_id)}</td>
-                  <td>{f.object_id || '\u2014'}</td>
+                  <td>{f.object_id || '—'}</td>
                   <td>{srcCount}</td>
-                  <td><span style={{ color: confColor, fontWeight: 600 }}>{conf != null ? `${(conf * 100).toFixed(0)}%` : '\u2014'}</span></td>
+                  <td><span style={{ color: confColor, fontWeight: 600 }}>{conf != null ? `${(conf * 100).toFixed(0)}%` : '—'}</span></td>
                   <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
                   <td>
                     {f.validation_status === 'verified'
                       ? <span className="badge-zt">Verified via Consensus</span>
                       : f.validation_status === 'rejected'
                         ? <span className="badge-zt badge-zt-fail">Rejected (Integrity Failure)</span>
-                        : <span className="c-dim">\u2014</span>}
+                        : <span className="c-dim">—</span>}
                   </td>
                   <td>
                     {f.analytics_result
                       ? <span className={`badge ${anaCls}`}>{f.analytics_result.classification}</span>
-                      : <span className="c-dim">\u2014</span>}
+                      : <span className="c-dim">—</span>}
                   </td>
                   <td className="c-dim">{fmtTime(f.timestamp)}</td>
                 </tr>
@@ -683,16 +798,16 @@
               return (
                 <tr key={v.event_id || i}>
                   <td className="c-dim">{truncId(v.event_id)}</td>
-                  <td><span className={`badge ${badgeCls}`}>{v.status || '\u2014'}</span></td>
+                  <td><span className={`badge ${badgeCls}`}>{v.status || '—'}</span></td>
                   <td>
                     {votes.map((vote, vi) => (
                       <span key={vi} style={{ marginRight: 4 }}>
-                        {vote.vote === 'approve' ? <span className="c-green">\u2713</span> : <span className="c-red">\u2717</span>}
+                        {vote.vote === 'approve' ? <span className="c-green">✓</span> : <span className="c-red">✗</span>}
                       </span>
                     ))}
-                    {votes.length === 0 && '\u2014'}
+                    {votes.length === 0 && '—'}
                   </td>
-                  <td>{v.consensus_reached != null ? (v.consensus_reached ? 'Yes' : 'No') : '\u2014'}</td>
+                  <td>{v.consensus_reached != null ? (v.consensus_reached ? 'Yes' : 'No') : '—'}</td>
                 </tr>
               );
             })}
@@ -728,7 +843,7 @@
                     <span style={{ marginLeft: 6, fontSize: '0.72rem' }}>{(score * 100).toFixed(0)}%</span>
                   </td>
                   <td style={{ fontSize: '0.7rem', color: '#6b7280', whiteSpace: 'normal', maxWidth: 200 }}>
-                    {Array.isArray(factors) ? factors.join(', ') : (factors || '\u2014')}
+                    {Array.isArray(factors) ? factors.join(', ') : (factors || '—')}
                   </td>
                 </tr>
               );
@@ -837,12 +952,12 @@
       const pendingPct = ((pending / total) * 100).toFixed(0);
       const consensusSuccess = enrichedFused.filter(f => f.consensus_reached === true).length;
       const consensusTotal = enrichedFused.filter(f => f.consensus_reached != null).length;
-      const consensusPct = consensusTotal > 0 ? ((consensusSuccess / consensusTotal) * 100).toFixed(0) : '\u2014';
+      const consensusPct = consensusTotal > 0 ? ((consensusSuccess / consensusTotal) * 100).toFixed(0) : '—';
 
       const confidences = enrichedFused.map(f => f.confidence_score ?? f.confidence ?? 0);
-      const avgConfidence = confidences.length > 0 ? (confidences.reduce((a, b) => a + b, 0) / confidences.length * 100).toFixed(0) : '\u2014';
+      const avgConfidence = confidences.length > 0 ? (confidences.reduce((a, b) => a + b, 0) / confidences.length * 100).toFixed(0) : '—';
       const sourceCounts = enrichedFused.map(f => Array.isArray(f.sources) ? f.sources.length : 0);
-      const avgSources = sourceCounts.length > 0 ? (sourceCounts.reduce((a, b) => a + b, 0) / sourceCounts.length).toFixed(1) : '\u2014';
+      const avgSources = sourceCounts.length > 0 ? (sourceCounts.reduce((a, b) => a + b, 0) / sourceCounts.length).toFixed(1) : '—';
 
       const classifications = enrichedFused.reduce((acc, f) => {
         const cls = f.analytics_result ? f.analytics_result.classification : 'normal';
@@ -908,13 +1023,13 @@
           </div>
           <div className="grid">
             <div className="panel">
-              <div className="panel-header"><span className="c-orange">\u25cf</span> Validation Status
+              <div className="panel-header"><span className="c-orange">●</span> Validation Status
                 <span className="panel-header-right">Last 60 seconds</span>
               </div>
               <div className="panel-body"><ValidationPanel validations={validations} /></div>
             </div>
             <div className="panel">
-              <div className="panel-header"><span className="c-green">\u25cf</span> Analytics Output
+              <div className="panel-header"><span className="c-green">●</span> Analytics Output
                 <span className="panel-header-right">Last 60 seconds</span>
               </div>
               <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
@@ -937,7 +1052,7 @@
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>🔍 Object Drilldown: {event.object_id}</h2>
-              <button className="modal-close" onClick={onClose}>\u2715 Close</button>
+              <button className="modal-close" onClick={onClose}>✕ Close</button>
             </div>
             <div className="modal-section">
               <h3>Event Details</h3>
@@ -1011,8 +1126,8 @@
                     {(valResult.votes || []).map((vote, vi) => (
                       <tr key={vi}>
                         <td className="c-dim">{truncId(vote.validator_id)}</td>
-                        <td>{vote.vote === 'approve' ? <span className="c-green">\u2713 approve</span> : <span className="c-red">\u2717 reject</span>}</td>
-                        <td className="c-dim">{vote.hash ? vote.hash.substring(0, 12) + '\u2026' : '\u2014'}</td>
+                        <td>{vote.vote === 'approve' ? <span className="c-green">✓ approve</span> : <span className="c-red">✗ reject</span>}</td>
+                        <td className="c-dim">{vote.hash ? vote.hash.substring(0, 12) + '…' : '—'}</td>
                         <td className="c-dim">{fmtTime(vote.timestamp)}</td>
                       </tr>
                     ))}
@@ -1037,7 +1152,7 @@
                   </div>
                   <div className="detail-item">
                     <div className="detail-label">Factors</div>
-                    <div className="detail-value" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{(anaResult.result.factors || []).join(', ') || '\u2014'}</div>
+                    <div className="detail-value" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{(anaResult.result.factors || []).join(', ') || '—'}</div>
                   </div>
                 </div>
               </div>
@@ -1065,6 +1180,19 @@
       const [activeView, setActiveView] = useState('command');
       const [lastUpdated, setLastUpdated] = useState(null);
       const [dynamicSources, setDynamicSources] = useState([]);
+      const [theme, setTheme] = useState(() => {
+        try { return localStorage.getItem('tfg-theme') || 'dark'; }
+        catch { return 'dark'; }
+      });
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('tfg-theme', theme); } catch {}
+      }, [theme]);
+
+      const toggleTheme = useCallback(() => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+      }, []);
 
       const poll = useCallback(async () => {
         const safe = async (url) => {
@@ -1170,21 +1298,26 @@
         <div className="app">
           <header className="header">
             <h1>🛰 Trusted Fusion Gateway</h1>
-            <p>Zero-Trust Multi-Source Data Fusion \u2014 Decision Support Platform</p>
+            <p>Zero-Trust Multi-Source Data Fusion — Decision Support Platform</p>
             <div className="live-indicator">
               <span className="live-dot"></span>
               Live Data Stream
               {lastUpdated && (
-                <span style={{ color: '#6b7280', marginLeft: 8 }}>
+                <span style={{ color: 'var(--text-dim)', marginLeft: 8 }}>
                   Updated {updatedAgo != null && updatedAgo <= 60 ? `${updatedAgo}s ago` : 'just now'}
                 </span>
               )}
+            </div>
+            <div className="theme-toggle">
+              <button className="theme-toggle-btn" onClick={toggleTheme}>
+                {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+              </button>
             </div>
           </header>
 
           <div className="view-toggle">
             <button className={`view-toggle-btn ${activeView === 'command' ? 'active' : ''}`}
-              onClick={() => setActiveView('command')}>\u26a1 Command View</button>
+              onClick={() => setActiveView('command')}>⚡ Command View</button>
             <button className={`view-toggle-btn ${activeView === 'analyst' ? 'active' : ''}`}
               onClick={() => setActiveView('analyst')}>📊 Analyst View</button>
           </div>
@@ -1223,21 +1356,30 @@
 
               <div className="panel full-width">
                 <div className="panel-header">
-                  <span className="c-purple">\u25cf</span> Fused Events (Enriched)
-                  <span className="panel-header-right">Last 60 seconds</span>
+                  <span className="c-purple">●</span> Fused Events (Enriched)
+                  <span className="panel-header-right">
+                    Last 60 seconds
+                    <ExportButtons data={enrichedFused} baseName="fused-events-export" />
+                  </span>
                 </div>
                 <div className="panel-body"><FusedEventsPanel enrichedFused={enrichedFused} onSelect={setSelectedEvent} /></div>
               </div>
 
               <div className="panel">
-                <div className="panel-header"><span className="c-orange">\u25cf</span> Validation Status
-                  <span className="panel-header-right">Last 60 seconds</span>
+                <div className="panel-header"><span className="c-orange">●</span> Validation Status
+                  <span className="panel-header-right">
+                    Last 60 seconds
+                    <ExportButtons data={validations} baseName="validation-results-export" />
+                  </span>
                 </div>
                 <div className="panel-body"><ValidationPanel validations={validations} /></div>
               </div>
               <div className="panel">
-                <div className="panel-header"><span className="c-green">\u25cf</span> Analytics Output
-                  <span className="panel-header-right">Last 60 seconds</span>
+                <div className="panel-header"><span className="c-green">●</span> Analytics Output
+                  <span className="panel-header-right">
+                    Last 60 seconds
+                    <ExportButtons data={analytics} baseName="analytics-results-export" />
+                  </span>
                 </div>
                 <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
               </div>
@@ -1247,8 +1389,22 @@
                 <div className="panel-body"><AnalyticsSandboxPanel /></div>
               </div>
               <div className="panel">
-                <div className="panel-header">📋 Audit Log</div>
+                <div className="panel-header">
+                  📋 Audit Log
+                  <span className="panel-header-right">
+                    <ExportButtons data={logs} baseName="audit-log-export" />
+                  </span>
+                </div>
                 <div className="panel-body"><AuditLogPanel logs={logs} /></div>
+              </div>
+
+              <div className="panel full-width">
+                <div className="panel-header">
+                  📡 Raw Events
+                  <span className="panel-header-right">
+                    <ExportButtons data={events} baseName="raw-events-export" />
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
