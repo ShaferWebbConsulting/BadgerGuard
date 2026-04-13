@@ -168,6 +168,13 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
+    /* ── Constants ── */
+    const ANOMALY_HIGH_THRESHOLD = 0.7;
+    const ANOMALY_ELEVATED_THRESHOLD = 0.4;
+    const MIN_CONFIDENCE_THRESHOLD = 0.3;
+    const ONLINE_TIMEOUT_MS = 30000;
+    const MAX_DRILLDOWN_ROWS = 10;
+
     /* ── Helpers ── */
     const truncId = (id) => id ? id.substring(0, 8) : '—';
     const fmtTime = (ts) => {
@@ -294,8 +301,8 @@
     function PriorityEventsPanel({ enrichedFused }) {
       const priorityEvents = enrichedFused.filter(f => {
         if (f.validation_status === 'rejected') return true;
-        if (f.analytics_result && f.analytics_result.anomaly_score >= 0.4) return true;
-        if (f.confidence_score < 0.3) return true;
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) return true;
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return true;
         return false;
       });
       if (priorityEvents.length === 0) {
@@ -304,10 +311,10 @@
       const getReason = (f) => {
         const reasons = [];
         if (f.validation_status === 'rejected') reasons.push('validation rejected');
-        if (f.confidence_score < 0.3) reasons.push('low confidence / corrupted payload');
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) reasons.push('low confidence / corrupted payload');
         if (f.analytics_result) {
-          if (f.analytics_result.anomaly_score >= 0.7) reasons.push('critical anomaly detected');
-          else if (f.analytics_result.anomaly_score >= 0.4) reasons.push('elevated anomaly detected');
+          if (f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) reasons.push('critical anomaly detected');
+          else if (f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) reasons.push('elevated anomaly detected');
           const factors = f.analytics_result.factors || [];
           if (factors.includes('anomaly_source_detected')) reasons.push('anomaly source');
         }
@@ -315,8 +322,8 @@
       };
       const getAction = (f) => {
         if (f.validation_status === 'rejected') return 'Investigate source data integrity';
-        if (f.analytics_result && f.analytics_result.anomaly_score >= 0.7) return 'Escalate — manual review required';
-        if (f.confidence_score < 0.3) return 'Quarantine — verify source health';
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate — manual review required';
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Quarantine — verify source health';
         return 'Monitor — review if persists';
       };
       return (
@@ -387,7 +394,7 @@
           if (!sourceTotal[sid]) { sourceTotal[sid] = 0; sourceApproved[sid] = 0; sourceAnomalyCount[sid] = 0; }
           sourceTotal[sid]++;
           if (f.validation_status === 'verified') sourceApproved[sid]++;
-          if (f.analytics_result && f.analytics_result.anomaly_score >= 0.4) sourceAnomalyCount[sid]++;
+          if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) sourceAnomalyCount[sid]++;
         }
       }
 
@@ -407,8 +414,8 @@
               const anomalies = sourceAnomalyCount[s.source_id] || 0;
               const now = Date.now();
               const lastSeen = s.last_seen ? new Date(s.last_seen).getTime() : 0;
-              const isOnline = (now - lastSeen) < 30000;
-              const trustColor = trustScore >= 0.7 ? '#34d399' : trustScore >= 0.4 ? '#f5c542' : '#f87171';
+              const isOnline = (now - lastSeen) < ONLINE_TIMEOUT_MS;
+              const trustColor = trustScore >= ANOMALY_HIGH_THRESHOLD ? '#34d399' : trustScore >= ANOMALY_ELEVATED_THRESHOLD ? '#f5c542' : '#f87171';
               const hasIssues = anomalies > 0 || trustScore < 0.5;
 
               return (
@@ -459,7 +466,7 @@
               const valCls = f.validation_status === 'verified' ? 'badge-verified'
                 : f.validation_status === 'rejected' ? 'badge-rejected' : 'badge-pending';
               const conf = f.confidence_score ?? f.confidence;
-              const confColor = conf >= 0.7 ? '#34d399' : conf >= 0.4 ? '#f5c542' : '#f87171';
+              const confColor = conf >= ANOMALY_HIGH_THRESHOLD ? '#34d399' : conf >= ANOMALY_ELEVATED_THRESHOLD ? '#f5c542' : '#f87171';
               const consensus = f.consensus_reached;
               const anaCls = f.analytics_result
                 ? (f.analytics_result.classification === 'critical' ? 'badge-critical'
@@ -533,8 +540,8 @@
     function AnalyticsPanel({ analytics }) {
       if (analytics.length === 0) return <Connecting label="analytics" />;
       const barColor = (score) => {
-        if (score >= 0.7) return '#f87171';
-        if (score >= 0.4) return '#fb923c';
+        if (score >= ANOMALY_HIGH_THRESHOLD) return '#f87171';
+        if (score >= ANOMALY_ELEVATED_THRESHOLD) return '#fb923c';
         return '#34d399';
       };
       return (
@@ -674,7 +681,7 @@
                 <table>
                   <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Time</th></tr></thead>
                   <tbody>
-                    {rawForObject.slice(-10).reverse().map((e, i) => (
+                    {rawForObject.slice(-MAX_DRILLDOWN_ROWS).reverse().map((e, i) => (
                       <tr key={e.event_id || i}>
                         <td className="c-dim">{truncId(e.event_id)}</td>
                         <td>{e.source_id}</td>
@@ -693,7 +700,7 @@
                 <table>
                   <thead><tr><th>Event ID</th><th>Sources</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
                   <tbody>
-                    {fusedForObject.slice(-10).reverse().map((f, i) => (
+                    {fusedForObject.slice(-MAX_DRILLDOWN_ROWS).reverse().map((f, i) => (
                       <tr key={f.event_id || i}>
                         <td className="c-dim">{truncId(f.event_id)}</td>
                         <td>{(f.sources || []).length}</td>

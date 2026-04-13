@@ -330,11 +330,16 @@ async fn validate_event(
             fusion_url.trim_end_matches('/'),
             event.event_id
         );
+        let event_id_for_log = event.event_id.clone();
         let client = reqwest::Client::new();
         let payload = serde_json::json!({"status": status});
         tokio::spawn(async move {
             if let Err(e) = client.patch(&status_url).json(&payload).send().await {
-                tracing::warn!(error = %e, "Failed to write back status to fusion service");
+                tracing::warn!(
+                    error = %e,
+                    event_id = %event_id_for_log,
+                    "Failed to write back status to fusion service"
+                );
             }
         });
     }
