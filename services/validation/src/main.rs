@@ -321,6 +321,24 @@ async fn validate_event(
         }
     }
 
+    // ── Write back status to fusion service ─────────────────────────────
+    {
+        let fusion_url = env::var("FUSION_URL")
+            .unwrap_or_else(|_| "http://fusion:3002".into());
+        let status_url = format!(
+            "{}/api/fused-events/{}/status",
+            fusion_url.trim_end_matches('/'),
+            event.event_id
+        );
+        let client = reqwest::Client::new();
+        let payload = serde_json::json!({"status": status});
+        tokio::spawn(async move {
+            if let Err(e) = client.patch(&status_url).json(&payload).send().await {
+                tracing::warn!(error = %e, "Failed to write back status to fusion service");
+            }
+        });
+    }
+
     Ok(Json(result))
 }
 

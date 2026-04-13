@@ -3,9 +3,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::{HeaderValue, Method},
-    routing::{get, post},
+    routing::{get, patch, post},
     Json, Router,
 };
 use serde::Deserialize;
@@ -218,6 +218,37 @@ async fn health() -> Json<HealthResponse> {
     })
 }
 
+#[derive(Deserialize)]
+struct StatusUpdate {
+    status: String,
+}
+
+async fn update_fused_event_status(
+    State(state): State<SharedState>,
+    Path(event_id): Path<String>,
+    Json(body): Json<StatusUpdate>,
+) -> axum::response::Response {
+    let mut s = state.write().await;
+    if let Some(ev) = s.fused_events.iter_mut().find(|e| e.event_id == event_id) {
+        ev.status = body.status.clone();
+
+        let audit = make_audit(
+            "fusion",
+            &event_id,
+            &format!("Status updated to '{}'", body.status),
+            None,
+        );
+        if s.audit_log.len() > MAX_STORED {
+            s.audit_log.remove(0);
+        }
+        s.audit_log.push(audit);
+
+        (axum::http::StatusCode::OK, Json(serde_json::json!({"updated": true}))).into_response()
+    } else {
+        (axum::http::StatusCode::NOT_FOUND, Json(serde_json::json!({"error": "event not found"}))).into_response()
+    }
+}
+
 // ── Background cleanup ─────────────────────────────────────────────────────
 
 fn spawn_cleanup(state: SharedState) {
@@ -269,6 +300,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/fuse", post(post_fuse))
         .route("/api/fused-events", get(get_fused_events))
+        .route("/api/fused-events/{event_id}/status", patch(update_fused_event_status))
         .route("/api/audit", get(get_audit))
         .route("/api/health", get(health))
         .layer(cors)
