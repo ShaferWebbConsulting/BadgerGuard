@@ -448,6 +448,10 @@
       });
     }
 
+    function computeMissionAssuranceScore(verified, rejected, total) {
+      return Math.max(0, Math.min(100, Math.round(((verified - rejected) / Math.max(1, total)) * 100)));
+    }
+
     /* Trend calculation helper */
     function useTrend(currentValue) {
       const prevRef = useRef(currentValue);
@@ -476,7 +480,7 @@
       const allOnline = offlineCount === 0;
       const systemStatus = allOnline ? 'OPERATIONAL' : 'DEGRADED';
       const statusCls = allOnline ? 'system-operational' : 'system-degraded';
-      const missionAssuranceScore = Math.max(0, Math.min(100, Math.round(((verified - rejected) / Math.max(1, enrichedFused.length)) * 100)));
+      const missionAssuranceScore = computeMissionAssuranceScore(verified, rejected, enrichedFused.length);
 
       const rejectedTrend = useTrend(rejected);
       const verifiedTrend = useTrend(verified);
@@ -577,7 +581,7 @@
       const avgIntegrity = enrichedFused.length
         ? Math.round((enrichedFused.reduce((acc, f) => acc + (f.confidence_score ?? f.confidence ?? 0), 0) / enrichedFused.length) * 100)
         : 0;
-      const assuranceScore = Math.max(0, Math.min(100, Math.round(((verified - rejected) / Math.max(1, enrichedFused.length)) * 100)));
+      const assuranceScore = computeMissionAssuranceScore(verified, rejected, enrichedFused.length);
       const runtimeFaultEvents = events.filter(e => e.payload?.corrupted || e.payload?.runtime_fault).length + (simState.degradedComms ? 1 : 0);
       const degradedComms = simState.degradedComms ? 'DEGRADED' : 'NOMINAL';
       const platformHealth = healthData.length ? `${Math.round((healthData.filter(h => h.ok).length / healthData.length) * 100)}%` : '—';
