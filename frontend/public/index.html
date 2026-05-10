@@ -449,7 +449,9 @@
     }
 
     function computeMissionAssuranceScore(verified, rejected, total) {
-      return Math.max(0, Math.min(100, Math.round(((verified - rejected) / Math.max(1, total)) * 100)));
+      const verifiedPct = Math.round((verified / Math.max(1, total)) * 100);
+      const rejectionPenalty = Math.round((rejected / Math.max(1, total)) * 20);
+      return Math.max(0, Math.min(100, verifiedPct - rejectionPenalty));
     }
 
     /* Trend calculation helper */
