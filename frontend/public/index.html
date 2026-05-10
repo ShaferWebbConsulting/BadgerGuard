@@ -348,9 +348,11 @@
     const MIN_CONFIDENCE_THRESHOLD = 0.3;
     const ONLINE_TIMEOUT_MS = 30000;
     const MAX_DRILLDOWN_ROWS = 10;
+    // Penalize rejected events to keep mission assurance conservative under unsafe COA conditions.
     const REJECTION_PENALTY_MULTIPLIER = 20;
 
     /* Autonomous platform name mapping */
+    // This map is intentionally extended at runtime when operators onboard additional ACP nodes.
     const VENDOR_NAMES = {
       'fleet-leader-node': 'Fleet Leader Node',
       'isr-drone': 'ISR Drone',
