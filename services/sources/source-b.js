@@ -8,7 +8,7 @@ const PLATFORM_IDS = [
   "logistics-uav",
 ];
 const EVENT_TYPES = ["coordination", "fault_event", "runtime_alert"];
-const ANOMALY_THRESHOLD = 0.15; // Elevated runtime fault signal rate for contested mission simulation
+const RUNTIME_FAULT_THRESHOLD = 0.15; // Elevated runtime fault signal rate for contested mission simulation
 
 const MISSION_SCENARIOS = [
   "contested airspace",
@@ -30,14 +30,15 @@ function generateEvent() {
 
   const reading = parseFloat((Math.random() * 1000).toFixed(2));
   const threshold = parseFloat((Math.random() * 500 + 250).toFixed(2));
-  const anomalyDetected = Math.random() < ANOMALY_THRESHOLD;
+  const runtimeFaultDetected = Math.random() < RUNTIME_FAULT_THRESHOLD;
 
   const payload = {
     mission_scenario: randomFrom(MISSION_SCENARIOS),
     sensor_type: randomFrom(["infrared", "radar", "optical"]),
     reading,
     threshold,
-    anomaly_detected: anomalyDetected,
+    runtime_fault_detected: runtimeFaultDetected,
+    anomaly_detected: runtimeFaultDetected,
     coordination_integrity: parseFloat(Math.random().toFixed(2)),
   };
 

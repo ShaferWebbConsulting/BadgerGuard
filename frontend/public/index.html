@@ -584,7 +584,7 @@
         ? Math.round((enrichedFused.reduce((acc, f) => acc + (f.confidence_score ?? f.confidence ?? 0), 0) / enrichedFused.length) * 100)
         : 0;
       const assuranceScore = computeMissionAssuranceScore(verified, rejected, enrichedFused.length);
-      const runtimeFaultEvents = events.filter(e => e.payload?.corrupted || e.payload?.runtime_fault).length + (simState.degradedComms ? 1 : 0);
+      const runtimeFaultEvents = events.filter(e => e.payload?.corrupted || e.payload?.runtime_fault).length;
       const degradedComms = simState.degradedComms ? 'DEGRADED' : 'NOMINAL';
       const platformHealth = healthData.length ? `${Math.round((healthData.filter(h => h.ok).length / healthData.length) * 100)}%` : '—';
       const consensusTotal = validations.filter(v => v.consensus_reached != null).length;
@@ -1338,8 +1338,19 @@
       const [lastUpdated, setLastUpdated] = useState(null);
       const [dynamicSources, setDynamicSources] = useState([]);
       const [theme, setTheme] = useState(() => {
-        try { return localStorage.getItem('badger-guard-theme') || 'dark'; }
-        catch { return 'dark'; }
+        try {
+          const current = localStorage.getItem('badger-guard-theme');
+          if (current) return current;
+          const legacy = localStorage.getItem('tfg-theme');
+          if (legacy) {
+            localStorage.setItem('badger-guard-theme', legacy);
+            localStorage.removeItem('tfg-theme');
+            return legacy;
+          }
+          return 'dark';
+        } catch {
+          return 'dark';
+        }
       });
 
       useEffect(() => {
