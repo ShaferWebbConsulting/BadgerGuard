@@ -348,6 +348,7 @@
     const MIN_CONFIDENCE_THRESHOLD = 0.3;
     const ONLINE_TIMEOUT_MS = 30000;
     const MAX_DRILLDOWN_ROWS = 10;
+    const REJECTION_PENALTY_MULTIPLIER = 20;
 
     /* Autonomous platform name mapping */
     const VENDOR_NAMES = {
@@ -450,7 +451,7 @@
 
     function computeMissionAssuranceScore(verified, rejected, total) {
       const verifiedPct = Math.round((verified / Math.max(1, total)) * 100);
-      const rejectionPenalty = Math.round((rejected / Math.max(1, total)) * 20);
+      const rejectionPenalty = Math.round((rejected / Math.max(1, total)) * REJECTION_PENALTY_MULTIPLIER);
       return Math.max(0, Math.min(100, verifiedPct - rejectionPenalty));
     }
 
@@ -1341,12 +1342,20 @@
         try {
           const current = localStorage.getItem('badger-guard-theme');
           if (current) return current;
-          const legacy = localStorage.getItem('tfg-theme');
-          if (legacy) {
-            localStorage.setItem('badger-guard-theme', legacy);
-            localStorage.removeItem('tfg-theme');
-            return legacy;
+
+          const migrationFlag = 'badger-guard-theme-migrated-v1';
+          const hasMigrated = localStorage.getItem(migrationFlag) === 'true';
+          if (!hasMigrated) {
+            const legacy = localStorage.getItem('tfg-theme');
+            if (legacy) {
+              localStorage.setItem('badger-guard-theme', legacy);
+              localStorage.removeItem('tfg-theme');
+              localStorage.setItem(migrationFlag, 'true');
+              return legacy;
+            }
+            localStorage.setItem(migrationFlag, 'true');
           }
+
           return 'dark';
         } catch {
           return 'dark';
