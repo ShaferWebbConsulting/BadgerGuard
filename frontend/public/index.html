@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trusted Fusion Gateway — Dashboard</title>
+  <title>BADGER Guard RTAA Platform — Dashboard</title>
   <script src="/react.production.min.js"></script>
   <script src="/react-dom.production.min.js"></script>
   <script src="/babel.min.js"></script>
@@ -348,12 +348,17 @@
     const MIN_CONFIDENCE_THRESHOLD = 0.3;
     const ONLINE_TIMEOUT_MS = 30000;
     const MAX_DRILLDOWN_ROWS = 10;
+    // Penalize rejected events to keep mission assurance conservative under unsafe COA conditions.
+    const REJECTION_PENALTY_MULTIPLIER = 20;
 
-    /* Multi-vendor source name mapping (9.2) */
+    /* Autonomous platform name mapping */
+    // This map is intentionally extended at runtime when operators onboard additional ACP nodes.
     const VENDOR_NAMES = {
-      'satellite-alpha': 'Vendor-A Satellite',
-      'sensor-beta': 'Vendor-B Sensor Network',
-      'payload-gamma': 'Vendor-C Payload',
+      'fleet-leader-node': 'Fleet Leader Node',
+      'isr-drone': 'ISR Drone',
+      'escort-drone': 'Escort Drone',
+      'autonomous-strike-platform': 'Autonomous Strike Platform',
+      'logistics-uav': 'Logistics UAV',
     };
     const vendorName = (sid) => VENDOR_NAMES[sid] || sid;
 
@@ -446,6 +451,12 @@
       });
     }
 
+    function computeMissionAssuranceScore(verified, rejected, total) {
+      const verifiedPct = Math.round((verified / Math.max(1, total)) * 100);
+      const rejectionPenalty = Math.round((rejected / Math.max(1, total)) * REJECTION_PENALTY_MULTIPLIER);
+      return Math.max(0, Math.min(100, verifiedPct - rejectionPenalty));
+    }
+
     /* Trend calculation helper */
     function useTrend(currentValue) {
       const prevRef = useRef(currentValue);
@@ -474,50 +485,58 @@
       const allOnline = offlineCount === 0;
       const systemStatus = allOnline ? 'OPERATIONAL' : 'DEGRADED';
       const statusCls = allOnline ? 'system-operational' : 'system-degraded';
+      const missionAssuranceScore = computeMissionAssuranceScore(verified, rejected, enrichedFused.length);
 
       const rejectedTrend = useTrend(rejected);
       const verifiedTrend = useTrend(verified);
 
       const reasons = [];
-      if (offlineCount > 0) reasons.push(`${offlineCount} source${offlineCount > 1 ? 's' : ''} offline`);
-      if (rejected > 0) reasons.push(`${rejected} rejected event${rejected > 1 ? 's' : ''}`);
-      if (simState.corrupted) reasons.push('fault injection active');
-      if (simState.anomaly) reasons.push('anomaly simulation active');
-      const reasonText = reasons.length > 0 ? reasons.join(', ') : 'All systems nominal';
+      if (offlineCount > 0) reasons.push(`${offlineCount} platform service${offlineCount > 1 ? 's' : ''} offline`);
+      if (rejected > 0) reasons.push(`${rejected} runtime safety alert${rejected > 1 ? 's' : ''}`);
+      if (simState.corrupted) reasons.push('unsafe COA simulation active');
+      if (simState.anomaly) reasons.push('fleet coordination stress active');
+      if (simState.degradedComms) reasons.push('degraded communications active');
+      const reasonText = reasons.length > 0 ? reasons.join(', ') : 'Fleet operations nominal';
 
       return (
         <div className="mission-status">
           <div className="mission-status-item" style={{ minWidth: 180 }}>
-            <div className="mission-status-label">System Status</div>
+            <div className="mission-status-label">Mission Assurance Status</div>
             <div style={{ marginTop: 4 }}><span className={`system-badge ${statusCls}`}>{systemStatus}</span></div>
             <div className="status-reason">{reasonText}</div>
           </div>
           <div className="mission-status-item">
-            <div className="mission-status-label">Trusted Events</div>
+            <div className="mission-status-label">Verified Mission State</div>
             <div className="mission-status-value" style={{ color: '#34d399' }}>
               {verified}<TrendArrow trend={verifiedTrend} goodWhenUp />
             </div>
             <div className="time-context">Last 60 seconds</div>
           </div>
           <div className="mission-status-item">
-            <div className="mission-status-label">Rejected (Threats)</div>
+            <div className="mission-status-label">Runtime Safety Alerts</div>
             <div className="mission-status-value" style={{ color: '#f87171' }}>
               {rejected}<TrendArrow trend={rejectedTrend} />
             </div>
             <div className="time-context">Last 60 seconds</div>
           </div>
           <div className="mission-status-item">
-            <div className="mission-status-label">Pending / Review</div>
+            <div className="mission-status-label">Active COAs</div>
             <div className="mission-status-value" style={{ color: '#f5c542' }}>{pending}</div>
             <div className="time-context">Last 60 seconds</div>
           </div>
           <div className="mission-status-item">
-            <div className="mission-status-label">Ingested</div>
+            <div className="mission-status-label">Fleet Status</div>
             <div className="mission-status-value" style={{ color: '#60a5fa' }}>{events.length}</div>
           </div>
           <div className="mission-status-item">
-            <div className="mission-status-label">Fused</div>
+            <div className="mission-status-label">Mission State</div>
             <div className="mission-status-value" style={{ color: '#a78bfa' }}>{enrichedFused.length}</div>
+          </div>
+          <div className="mission-status-item">
+            <div className="mission-status-label">Mission Assurance Score</div>
+            <div className="mission-status-value" style={{ color: missionAssuranceScore >= 70 ? '#34d399' : missionAssuranceScore >= 40 ? '#f5c542' : '#f87171' }}>
+              {missionAssuranceScore}%
+            </div>
           </div>
         </div>
       );
@@ -526,10 +545,10 @@
     /* Data Flow Health */
     function DataFlowHealth({ events, fused, validations, analytics, healthData }) {
       const stages = [
-        { name: 'Ingestion', key: 'ingestion', color: '#60a5fa', border: '#2563eb', count: events.length },
-        { name: 'Fusion', key: 'fusion', color: '#a78bfa', border: '#7c3aed', count: fused.length },
-        { name: 'Validation', key: 'validation', color: '#fb923c', border: '#ea580c', count: validations.length },
-        { name: 'Analytics', key: 'analytics', color: '#34d399', border: '#059669', count: analytics.length },
+        { name: 'Mission Autonomy Layer', key: 'ingestion', color: '#60a5fa', border: '#2563eb', count: events.length },
+        { name: 'COA Validation Engine', key: 'fusion', color: '#a78bfa', border: '#7c3aed', count: fused.length },
+        { name: 'Runtime Validation Layer', key: 'validation', color: '#fb923c', border: '#ea580c', count: validations.length },
+        { name: 'Mission Assurance Engine', key: 'analytics', color: '#34d399', border: '#059669', count: analytics.length },
       ];
       return (
         <div className="pipeline">
@@ -559,23 +578,160 @@
       );
     }
 
+    function RuntimeAssuranceOverview({ events, enrichedFused, validations, analytics, healthData, simState }) {
+      const verified = enrichedFused.filter(f => f.validation_status === 'verified').length;
+      const rejected = enrichedFused.filter(f => f.validation_status === 'rejected').length;
+      const activeCoas = events.filter(e => e.event_type === 'autonomy_coa').length;
+      const safetyAlerts = rejected + analytics.filter(a => (a.result?.classification || 'normal') !== 'normal').length;
+      const avgIntegrity = enrichedFused.length
+        ? Math.round((enrichedFused.reduce((acc, f) => acc + (f.confidence_score ?? f.confidence ?? 0), 0) / enrichedFused.length) * 100)
+        : 0;
+      const assuranceScore = computeMissionAssuranceScore(verified, rejected, enrichedFused.length);
+      const runtimeFaultEvents = events.filter(e => e.payload?.corrupted || e.payload?.runtime_fault).length;
+      const degradedComms = simState.degradedComms ? 'DEGRADED' : 'NOMINAL';
+      const platformHealth = healthData.length ? `${Math.round((healthData.filter(h => h.ok).length / healthData.length) * 100)}%` : '—';
+      const consensusTotal = validations.filter(v => v.consensus_reached != null).length;
+      const consensusOk = validations.filter(v => v.consensus_reached === true).length;
+      const consensusPct = consensusTotal > 0 ? `${Math.round((consensusOk / consensusTotal) * 100)}%` : '—';
+
+      const items = [
+        ['Fleet Status', `${events.length} telemetry events`],
+        ['Mission State', verified > rejected ? 'STABLE' : 'CONTESTED'],
+        ['Active COAs', String(activeCoas)],
+        ['Runtime Safety Alerts', String(safetyAlerts)],
+        ['Fleet Coordination Integrity', `${avgIntegrity}%`],
+        ['Mission Assurance Score', `${assuranceScore}%`],
+        ['Runtime Fault Events', String(runtimeFaultEvents)],
+        ['Mitigation Actions', safetyAlerts > 0 ? 'ACTIVE' : 'READY'],
+        ['Degraded Communications Status', degradedComms],
+        ['Platform Health', platformHealth],
+        ['Fleet Consensus / Coordination Status', consensusPct],
+      ];
+
+      return (
+        <div className="panel full-width">
+          <div className="panel-header">
+            <span className="c-blue">🛡</span> Runtime Mission Assurance Overview
+          </div>
+          <div className="panel-body" style={{ padding: 12 }}>
+            <div className="analyst-grid" style={{ marginBottom: 0 }}>
+              {items.map(([label, value]) => (
+                <div key={label} className="analyst-card" style={{ padding: '12px 14px' }}>
+                  <div className="analyst-card-title">{label}</div>
+                  <div className="analyst-metric-value" style={{ fontSize: '1.1rem' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ArchitecturePanel() {
+      return (
+        <div className="panel full-width">
+          <div className="panel-header"><span className="c-purple">🏗</span> BADGER Guard RTAA Architecture</div>
+          <div className="panel-body" style={{ padding: 14, fontFamily: '\'Cascadia Code\', \'Fira Code\', monospace', fontSize: '0.72rem', whiteSpace: 'pre-wrap', color: 'var(--text-muted)' }}>
+{`Mission Autonomy Layer
+  └─ Flight-Level Autonomy
+      └─ Collaborative Autonomous Fleet (ACP / CCA)
+          └─ COA Validation Engine
+              └─ Runtime Assurance Layer
+                  ├─ Mission Assurance Engine
+                  ├─ Fleet Coordination Integrity Engine
+                  └─ Mitigation & Recovery Manager`}
+          </div>
+        </div>
+      );
+    }
+
+    function RuntimeFaultEventsPanel({ simState }) {
+      const events = [
+        { label: 'unsafe route detected', active: simState.corrupted },
+        { label: 'mission conflict identified', active: simState.corrupted },
+        { label: 'deconfliction failure', active: simState.anomaly },
+        { label: 'fleet synchronization degraded', active: simState.anomaly || simState.degradedComms },
+        { label: 'communications disruption', active: simState.degradedComms },
+        { label: 'mission reassignment triggered', active: simState.corrupted || simState.degradedComms },
+      ];
+      return (
+        <table>
+          <thead><tr><th>Runtime Fault Event</th><th>Status</th><th>Assurance Interpretation</th></tr></thead>
+          <tbody>
+            {events.map((e) => (
+              <tr key={e.label}>
+                <td>{e.label}</td>
+                <td><span className={`badge ${e.active ? 'badge-rejected' : 'badge-verified'}`}>{e.active ? 'active' : 'monitoring'}</span></td>
+                <td style={{ color: 'var(--text-muted)', whiteSpace: 'normal' }}>
+                  {e.active ? 'Mission-level autonomy deviation detected; mitigation workflow required.' : 'No active breach of runtime mission assurance constraints.'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+
+    function MitigationActionsPanel({ simState }) {
+      const actions = [
+        ['reject unsafe COA', simState.corrupted],
+        ['constrained maneuver enforcement', simState.anomaly],
+        ['fleet task reallocation', simState.corrupted || simState.degradedComms],
+        ['safe loiter mode', simState.anomaly],
+        ['return-to-base state', simState.degradedComms],
+        ['degraded autonomy mode', simState.degradedComms],
+      ];
+      return (
+        <table>
+          <thead><tr><th>Mitigation Workflow</th><th>Status</th></tr></thead>
+          <tbody>
+            {actions.map(([name, active]) => (
+              <tr key={name}>
+                <td>{name}</td>
+                <td><span className={`badge ${active ? 'badge-elevated' : 'badge-normal'}`}>{active ? 'engaged' : 'standby'}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+
     /* Fault Injection Controls */
     function SimulationControls({ simState, onToggle }) {
+      const scenarios = [
+        { name: 'contested airspace', active: simState.anomaly },
+        { name: 'degraded communications', active: simState.degradedComms },
+        { name: 'conflicting task allocation', active: simState.corrupted },
+        { name: 'unsafe flight path generation', active: simState.corrupted },
+        { name: 'mission replanning', active: simState.anomaly },
+        { name: 'fleet coordination failures', active: simState.degradedComms || simState.anomaly },
+      ];
       return (
         <div className="sim-panel">
-          <div className="sim-panel-header">🧪 Fault Injection Controls</div>
+          <div className="sim-panel-header">🧪 Runtime Fault Injection Controls</div>
           <button className={`sim-btn ${simState.corrupted ? 'active' : ''}`}
             onClick={() => onToggle('corrupted')}>
-            {simState.corrupted ? '⚠ Injecting Corrupted Data' : '💉 Inject Corrupted Data'}
+            {simState.corrupted ? '⚠ Reject Unsafe COA Scenario Active' : '🧭 Inject Unsafe COA / Task Conflict'}
           </button>
           <button className={`sim-btn ${simState.anomaly ? 'active' : ''}`}
             onClick={() => onToggle('anomaly')}>
-            {simState.anomaly ? '⚠ High Anomaly Rate' : '📈 Increase Anomaly Rate'}
+            {simState.anomaly ? '⚠ Fleet Coordination Stress Active' : '📈 Inject Fleet Coordination Failure'}
           </button>
+          <button className={`sim-btn ${simState.degradedComms ? 'active' : ''}`}
+            onClick={() => onToggle('degradedComms')}>
+            {simState.degradedComms ? '⚠ Degraded Communications Active' : '📡 Inject Degraded Communications'}
+          </button>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+            Mission Scenarios: {scenarios.map((s, idx) => (
+              <span key={s.name} style={{ color: s.active ? '#f87171' : 'var(--text-dimmer)' }}>
+                {idx > 0 ? ' · ' : ''}{s.name}
+              </span>
+            ))}
+          </div>
           <div className="sim-status">
-            {(simState.corrupted || simState.anomaly)
-              ? '⚠ Simulation active — watch metrics react'
-              : 'Trigger fault scenarios to test resilience'}
+            {(simState.corrupted || simState.anomaly || simState.degradedComms)
+              ? '⚠ Runtime assurance exercise active — monitor mission assurance and mitigation'
+              : 'Trigger contested mission scenarios to validate fleet resilience'}
           </div>
         </div>
       );
@@ -590,25 +746,25 @@
         return false;
       });
       if (priorityEvents.length === 0) {
-        return <div className="connecting" style={{ color: '#34d399' }}>No priority events — system nominal</div>;
+        return <div className="connecting" style={{ color: '#34d399' }}>No runtime safety alerts — mission assurance nominal</div>;
       }
       const getReason = (f) => {
         const reasons = [];
-        if (f.validation_status === 'rejected') reasons.push('payload integrity failure');
-        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) reasons.push('low confidence / corrupted payload');
+        if (f.validation_status === 'rejected') reasons.push('unsafe or invalid autonomy-generated COA');
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) reasons.push('fleet coordination integrity degraded');
         if (f.analytics_result) {
           if (f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) reasons.push('critical anomaly detected');
           else if (f.analytics_result.anomaly_score >= ANOMALY_ELEVATED_THRESHOLD) reasons.push('elevated anomaly detected');
           const factors = f.analytics_result.factors || [];
-          if (factors.includes('anomaly_source_detected')) reasons.push('anomaly source');
+          if (factors.includes('anomaly_source_detected')) reasons.push('autonomy fault source identified');
         }
         return reasons.join('; ') || 'suspicious event';
       };
       const getAction = (f) => {
-        if (f.validation_status === 'rejected') return 'Investigate source data integrity';
-        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate — manual review required';
-        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Quarantine — verify source health';
-        return 'Monitor — review if persists';
+        if (f.validation_status === 'rejected') return 'Reject unsafe COA and trigger constrained maneuver enforcement';
+        if (f.analytics_result && f.analytics_result.anomaly_score >= ANOMALY_HIGH_THRESHOLD) return 'Escalate mitigation and fleet task reallocation';
+        if (f.confidence_score < MIN_CONFIDENCE_THRESHOLD) return 'Shift fleet to degraded autonomy mode';
+        return 'Monitor mission-state and maintain assurance checks';
       };
       const getRowClass = (f) => {
         if (f.validation_status === 'rejected') return 'priority-rejected';
@@ -623,7 +779,7 @@
       return (
         <table>
           <thead><tr>
-            <th>Object ID</th><th>Validation</th><th>Trust</th><th>Anomaly</th><th>Reason</th><th>Recommended Action</th>
+            <th>Platform ID</th><th>COA Validation</th><th>Mission Trust</th><th>Runtime Analysis</th><th>Reason</th><th>Mitigation Action</th>
           </tr></thead>
           <tbody>
             {priorityEvents.slice(0, 20).map((f, i) => {
@@ -639,9 +795,9 @@
                   <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
                   <td>
                     {f.validation_status === 'verified'
-                      ? <span className="badge-zt">Zero Trust Verified</span>
+                        ? <span className="badge-zt">Runtime Assured</span>
                       : f.validation_status === 'rejected'
-                        ? <span className="badge-zt badge-zt-fail">Rejected (Integrity Failure)</span>
+                        ? <span className="badge-zt badge-zt-fail">Rejected (Unsafe COA)</span>
                         : <span className="c-dim">pending</span>}
                   </td>
                   <td>
@@ -695,7 +851,7 @@
       if (sources.length === 0) return <Connecting label="source data" />;
       return (
         <table>
-          <thead><tr><th>Source (Vendor)</th><th>Status</th><th>Trust Score</th><th>Events</th><th>Last Seen</th><th>Issues</th></tr></thead>
+          <thead><tr><th>Autonomous Platform</th><th>Status</th><th>Coordination Integrity</th><th>Events</th><th>Last Seen</th><th>Assurance Issues</th></tr></thead>
           <tbody>
             {sources.map((s, i) => {
               const total = sourceTotal[s.source_id] || 0;
@@ -728,7 +884,7 @@
                   <td className="c-dim">{fmtTime(s.last_seen)}</td>
                   <td>
                     {hasIssues
-                      ? <span className="issue-flag">{anomalies > 0 ? `${anomalies} anomalies` : 'low trust'}</span>
+                      ? <span className="issue-flag">{anomalies > 0 ? `${anomalies} runtime anomalies` : 'low coordination integrity'}</span>
                       : <span className="no-issue">—</span>}
                   </td>
                 </tr>
@@ -741,11 +897,11 @@
 
     /* Enriched Fused Events Panel */
     function FusedEventsPanel({ enrichedFused, onSelect }) {
-      if (enrichedFused.length === 0) return <Connecting label="fused events" />;
+      if (enrichedFused.length === 0) return <Connecting label="verified mission state" />;
       return (
         <table>
           <thead><tr>
-            <th>Event ID</th><th>Object ID</th><th>Sources</th><th>Confidence</th><th>Validation</th><th>Trust</th><th>Analytics</th><th>Time</th>
+            <th>Event ID</th><th>Platform ID</th><th>Fleet Nodes</th><th>Coordination Confidence</th><th>COA Validation</th><th>Mission Trust</th><th>Runtime Analysis</th><th>Time</th>
           </tr></thead>
           <tbody>
             {enrichedFused.slice(0, 30).map((f, i) => {
@@ -767,9 +923,9 @@
                   <td><span className={`badge ${valCls}`}>{f.validation_status}</span></td>
                   <td>
                     {f.validation_status === 'verified'
-                      ? <span className="badge-zt">Verified via Consensus</span>
+                      ? <span className="badge-zt">Verified Mission State</span>
                       : f.validation_status === 'rejected'
-                        ? <span className="badge-zt badge-zt-fail">Rejected (Integrity Failure)</span>
+                        ? <span className="badge-zt badge-zt-fail">Rejected (Unsafe COA)</span>
                         : <span className="c-dim">—</span>}
                   </td>
                   <td>
@@ -788,10 +944,10 @@
 
     /* Validation Panel */
     function ValidationPanel({ validations }) {
-      if (validations.length === 0) return <Connecting label="validations" />;
+      if (validations.length === 0) return <Connecting label="COA validations" />;
       return (
         <table>
-          <thead><tr><th>Event ID</th><th>Status</th><th>Votes</th><th>Consensus</th></tr></thead>
+          <thead><tr><th>Event ID</th><th>COA Status</th><th>Runtime Votes</th><th>Fleet Consensus</th></tr></thead>
           <tbody>
             {validations.slice(0, 20).map((v, i) => {
               const badgeCls = v.status === 'verified' ? 'badge-verified'
@@ -820,7 +976,7 @@
 
     /* Analytics Panel */
     function AnalyticsPanel({ analytics }) {
-      if (analytics.length === 0) return <Connecting label="analytics" />;
+      if (analytics.length === 0) return <Connecting label="runtime mission analysis" />;
       const barColor = (score) => {
         if (score >= ANOMALY_HIGH_THRESHOLD) return '#f87171';
         if (score >= ANOMALY_ELEVATED_THRESHOLD) return '#fb923c';
@@ -828,7 +984,7 @@
       };
       return (
         <table>
-          <thead><tr><th>Event ID</th><th>Classification</th><th>Anomaly Score</th><th>Factors</th></tr></thead>
+          <thead><tr><th>Event ID</th><th>Mission Classification</th><th>Autonomy Fault Score</th><th>Factors</th></tr></thead>
           <tbody>
             {analytics.slice(0, 20).map((a, i) => {
               const r = a.result || {};
@@ -887,12 +1043,12 @@
       );
     }
 
-    /* Analytics Sandbox Panel (9.1) */
+    /* Mitigation & Recovery Manager Panel */
     function AnalyticsSandboxPanel() {
       const [tools, setTools] = useState([
-        { name: 'anomaly-detector-v1', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-only', lastExec: new Date().toISOString() },
-        { name: 'threat-correlator', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-only', lastExec: new Date().toISOString() },
-        { name: 'Vendor-C Threat Correlator', vendor: 'Vendor-C', status: 'AVAILABLE', sandboxed: false, inputPolicy: null, lastExec: null },
+        { name: 'constrained-maneuver-enforcement', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-mission-state', lastExec: new Date().toISOString() },
+        { name: 'fleet-task-reallocation', vendor: 'Internal', status: 'ACTIVE', sandboxed: true, inputPolicy: 'verified-mission-state', lastExec: new Date().toISOString() },
+        { name: 'degraded-autonomy-controller', vendor: 'Vendor-C', status: 'AVAILABLE', sandboxed: false, inputPolicy: null, lastExec: null },
       ]);
       const onboardTool = (index) => {
         setTools(prev => prev.map((t, i) => {
@@ -906,7 +1062,7 @@
         const externalCount = tools.filter(t => t.vendor !== 'Internal').length;
         const letter = VENDOR_LETTERS[externalCount] || `X${externalCount}`;
         const newTool = {
-          name: `custom-analytics-${Date.now().toString(36).slice(-4)}`,
+          name: `custom-mitigation-${Date.now().toString(36).slice(-4)}`,
           vendor: `Vendor-${letter}`,
           status: 'AVAILABLE',
           sandboxed: false,
@@ -918,7 +1074,7 @@
       return (
         <div>
           <div style={{ padding: '10px 14px', fontSize: '0.7rem', color: '#6b7280' }}>
-            Analytics run only on <span className="c-green" style={{ fontWeight: 600 }}>VERIFIED</span> data
+            Mitigation workflows run only on <span className="c-green" style={{ fontWeight: 600 }}>VERIFIED</span> mission-state data
             <span className="badge-sandbox" style={{ marginLeft: 8 }}>Sandboxed Execution</span>
           </div>
           {tools.map((t, i) => (
@@ -939,7 +1095,7 @@
             </div>
           ))}
           <div style={{ padding: '8px 12px' }}>
-            <button className="onboard-btn" onClick={loadNewTool}>+ Load New Analytics Tool</button>
+            <button className="onboard-btn" onClick={loadNewTool}>+ Load New Mitigation Workflow</button>
           </div>
         </div>
       );
@@ -977,7 +1133,7 @@
         <div>
           <div className="analyst-grid">
             <div className="analyst-card">
-              <div className="analyst-card-title">📋 Validation Metrics</div>
+              <div className="analyst-card-title">📋 Runtime Validation Metrics</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Verified</span>
                 <span className="analyst-metric-value c-green">{verifiedPct}%</span>
@@ -997,7 +1153,7 @@
               <div className="time-context" style={{ marginTop: 8 }}>Based on last 60 seconds of data</div>
             </div>
             <div className="analyst-card">
-              <div className="analyst-card-title">🔗 Fusion Metrics</div>
+              <div className="analyst-card-title">🔗 Fleet Coordination Integrity Metrics</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Avg Confidence</span>
                 <span className="analyst-metric-value" style={{ color: '#a78bfa' }}>{avgConfidence}%</span>
@@ -1009,7 +1165,7 @@
               <div className="time-context" style={{ marginTop: 8 }}>Based on last 60 seconds of data</div>
             </div>
             <div className="analyst-card">
-              <div className="analyst-card-title">📊 Analytics Distribution</div>
+              <div className="analyst-card-title">📊 Runtime Mission Analysis Distribution</div>
               <div className="analyst-metric">
                 <span className="analyst-metric-label">Normal</span>
                 <span className="analyst-metric-value c-green">{normalPct}%</span>
@@ -1027,13 +1183,13 @@
           </div>
           <div className="grid">
             <div className="panel">
-              <div className="panel-header"><span className="c-orange">●</span> Validation Status
+              <div className="panel-header"><span className="c-orange">●</span> COA Validation Status
                 <span className="panel-header-right">Last 60 seconds</span>
               </div>
               <div className="panel-body"><ValidationPanel validations={validations} /></div>
             </div>
             <div className="panel">
-              <div className="panel-header"><span className="c-green">●</span> Analytics Output
+              <div className="panel-header"><span className="c-green">●</span> Runtime Mission Analysis
                 <span className="panel-header-right">Last 60 seconds</span>
               </div>
               <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
@@ -1043,7 +1199,7 @@
       );
     }
 
-    /* Object Drilldown Modal */
+    /* Platform Drilldown Modal */
     function DrilldownModal({ event, events, enrichedFused, validations, analytics, onClose }) {
       if (!event) return null;
       const rawForObject = events.filter(e => e.object_id === event.object_id);
@@ -1055,18 +1211,18 @@
         <div className="modal-overlay" onClick={onClose}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>🔍 Object Drilldown: {event.object_id}</h2>
+              <h2>🔍 Platform Drilldown: {event.object_id}</h2>
               <button className="modal-close" onClick={onClose}>✕ Close</button>
             </div>
             <div className="modal-section">
-              <h3>Event Details</h3>
+                  <h3>Runtime Event Details</h3>
               <div className="detail-row">
                 <div className="detail-item">
                   <div className="detail-label">Event ID</div>
                   <div className="detail-value">{event.event_id}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Object ID</div>
+                    <div className="detail-label">Platform ID</div>
                   <div className="detail-value">{event.object_id}</div>
                 </div>
                 <div className="detail-item">
@@ -1076,16 +1232,16 @@
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Validation Status</div>
+                    <div className="detail-label">COA Validation Status</div>
                   <div className="detail-value">
                     <span className={`badge badge-${event.validation_status}`}>{event.validation_status}</span>
-                    {event.validation_status === 'verified' && <span className="badge-zt" style={{ marginLeft: 6 }}>Zero Trust Verified</span>}
+                      {event.validation_status === 'verified' && <span className="badge-zt" style={{ marginLeft: 6 }}>Runtime Assured</span>}
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-section">
-              <h3>Raw Source Events ({rawForObject.length})</h3>
+              <h3>Raw Autonomous Platform Events ({rawForObject.length})</h3>
               {rawForObject.length > 0 ? (
                 <table>
                   <thead><tr><th>Event ID</th><th>Source</th><th>Type</th><th>Time</th></tr></thead>
@@ -1103,7 +1259,7 @@
               ) : <div className="connecting">No raw events found</div>}
             </div>
             <div className="modal-section">
-              <h3>Fused Event History ({fusedForObject.length})</h3>
+              <h3>Verified Mission State History ({fusedForObject.length})</h3>
               {fusedForObject.length > 0 ? (
                 <table>
                   <thead><tr><th>Event ID</th><th>Sources</th><th>Confidence</th><th>Status</th><th>Time</th></tr></thead>
@@ -1119,11 +1275,11 @@
                     ))}
                   </tbody>
                 </table>
-              ) : <div className="connecting">No fused events</div>}
+              ) : <div className="connecting">No verified mission-state events</div>}
             </div>
             {valResult && (
               <div className="modal-section">
-                <h3>Validation Votes</h3>
+                <h3>Runtime Validation Votes</h3>
                 <table>
                   <thead><tr><th>Validator</th><th>Vote</th><th>Hash (prefix)</th><th>Time</th></tr></thead>
                   <tbody>
@@ -1144,7 +1300,7 @@
             )}
             {anaResult && (
               <div className="modal-section">
-                <h3>Analytics Result</h3>
+                <h3>Runtime Mission Analysis Result</h3>
                 <div className="detail-row">
                   <div className="detail-item">
                     <div className="detail-label">Classification</div>
@@ -1180,18 +1336,37 @@
       const [logs, setLogs] = useState([]);
       const [healthData, setHealthData] = useState([]);
       const [selectedEvent, setSelectedEvent] = useState(null);
-      const [simState, setSimState] = useState({ corrupted: false, anomaly: false });
+      const [simState, setSimState] = useState({ corrupted: false, anomaly: false, degradedComms: false });
       const [activeView, setActiveView] = useState('command');
       const [lastUpdated, setLastUpdated] = useState(null);
       const [dynamicSources, setDynamicSources] = useState([]);
       const [theme, setTheme] = useState(() => {
-        try { return localStorage.getItem('tfg-theme') || 'dark'; }
-        catch { return 'dark'; }
+        try {
+          const current = localStorage.getItem('badger-guard-theme');
+          if (current) return current;
+
+          const migrationFlag = 'badger-guard-theme-migrated-v1';
+          const hasMigrated = localStorage.getItem(migrationFlag) === 'true';
+          if (!hasMigrated) {
+            const legacy = localStorage.getItem('tfg-theme');
+            if (legacy) {
+              localStorage.setItem('badger-guard-theme', legacy);
+              localStorage.removeItem('tfg-theme');
+              localStorage.setItem(migrationFlag, 'true');
+              return legacy;
+            }
+            localStorage.setItem(migrationFlag, 'true');
+          }
+
+          return 'dark';
+        } catch {
+          return 'dark';
+        }
       });
 
       useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
-        try { localStorage.setItem('tfg-theme', theme); } catch {}
+        try { localStorage.setItem('badger-guard-theme', theme); } catch {}
       }, [theme]);
 
       const toggleTheme = useCallback(() => {
@@ -1258,22 +1433,28 @@
             const objects = ['OBJ-001', 'OBJ-002', 'OBJ-003'];
             const burst = type === 'corrupted'
               ? objects.map(obj => ({
-                  source_id: 'sensor-beta', event_type: 'sensor', object_id: obj,
+                  source_id: 'autonomous-strike-platform', event_type: 'fault_event', object_id: obj,
                   timestamp: new Date().toISOString(),
-                  payload: { sensor_type: 'radar', reading: 999, threshold: 100, corrupted: true },
+                  payload: { sensor_type: 'radar', reading: 999, threshold: 100, corrupted: true, runtime_fault: 'unsafe route detected' },
                 }))
-              : objects.map(obj => ({
-                  source_id: 'sensor-beta', event_type: 'anomaly', object_id: obj,
+              : type === 'anomaly'
+                ? objects.map(obj => ({
+                  source_id: 'escort-drone', event_type: 'coordination', object_id: obj,
                   timestamp: new Date().toISOString(),
-                  payload: { sensor_type: 'infrared', reading: 950, threshold: 200, anomaly_detected: true },
+                  payload: { sensor_type: 'infrared', reading: 950, threshold: 200, anomaly_detected: true, mission_scenario: 'fleet coordination failures' },
+                }))
+                : objects.map(obj => ({
+                  source_id: 'logistics-uav', event_type: 'runtime_alert', object_id: obj,
+                  timestamp: new Date().toISOString(),
+                  payload: { mission_scenario: 'degraded communications', runtime_fault: 'communications disruption', anomaly_detected: true },
                 }));
             burst.forEach(ev => {
               fetch('/api/ingestion/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) }).catch(() => {});
             });
             objects.forEach(obj => {
               fetch('/api/ingestion/events', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ source_id: 'satellite-alpha', event_type: type === 'anomaly' ? 'anomaly' : 'tracking', object_id: obj,
-                  timestamp: new Date().toISOString(), payload: { latitude: 0, longitude: 0, altitude: 400, velocity: 2, heading: 90 } }),
+                body: JSON.stringify({ source_id: 'fleet-leader-node', event_type: type === 'corrupted' ? 'autonomy_coa' : 'mission_state', object_id: obj,
+                  timestamp: new Date().toISOString(), payload: { latitude: 0, longitude: 0, altitude: 400, velocity: 2, heading: 90, mission_state: type === 'degradedComms' ? 'degraded-comms' : 'contested-airspace' } }),
               }).catch(() => {});
             });
             setTimeout(() => poll(), 1500);
@@ -1285,10 +1466,10 @@
 
       const handleAddSource = useCallback(() => {
         const srcNum = dynamicSources.length + 1;
-        const id = `vendor-new-${srcNum}-sensor-${Date.now().toString(36).slice(-4)}`;
+        const id = `acp-node-${srcNum}-${Date.now().toString(36).slice(-4)}`;
         const newSrc = { id, addedAt: new Date().toISOString(), events: 0 };
         setDynamicSources(prev => [...prev, newSrc]);
-        VENDOR_NAMES[id] = `New Vendor-${srcNum} Sensor`;
+        VENDOR_NAMES[id] = `Autonomous Collaborative Platform Node ${srcNum}`;
       }, [dynamicSources.length]);
 
       const enrichedFused = useMemo(
@@ -1301,11 +1482,11 @@
       return (
         <div className="app">
           <header className="header">
-            <h1>🛰 Trusted Fusion Gateway</h1>
-            <p>Zero-Trust Multi-Source Data Fusion — Decision Support Platform</p>
+            <h1>🛡 BADGER Guard RTAA Platform</h1>
+            <p>Runtime Assured Autonomy for Collaborative Autonomous Platforms and CCA Fleet Operations</p>
             <div className="live-indicator">
               <span className="live-dot"></span>
-              Live Data Stream
+              Live Runtime Assurance Stream
               {lastUpdated && (
                 <span style={{ color: 'var(--text-dim)', marginLeft: 8 }}>
                   Updated {updatedAgo != null && updatedAgo <= 60 ? `${updatedAgo}s ago` : 'just now'}
@@ -1321,9 +1502,9 @@
 
           <div className="view-toggle">
             <button className={`view-toggle-btn ${activeView === 'command' ? 'active' : ''}`}
-              onClick={() => setActiveView('command')}>⚡ Command View</button>
+              onClick={() => setActiveView('command')}>⚡ Operations View</button>
             <button className={`view-toggle-btn ${activeView === 'analyst' ? 'active' : ''}`}
-              onClick={() => setActiveView('analyst')}>📊 Analyst View</button>
+              onClick={() => setActiveView('analyst')}>📊 Mission Analysis View</button>
           </div>
 
           <div className="top-bar">
@@ -1339,9 +1520,20 @@
 
           {activeView === 'command' ? (
             <div className="grid">
+              <RuntimeAssuranceOverview
+                events={events}
+                enrichedFused={enrichedFused}
+                validations={validations}
+                analytics={analytics}
+                healthData={healthData}
+                simState={simState}
+              />
+
+              <ArchitecturePanel />
+
               <div className="panel full-width panel-priority">
                 <div className="panel-header">
-                  <span className="c-red">🚨</span> Priority Events
+                  <span className="c-red">🚨</span> Runtime Safety Alerts
                   <span className="panel-header-right">Last 60 seconds</span>
                 </div>
                 <div className="panel-body"><PriorityEventsPanel enrichedFused={enrichedFused} /></div>
@@ -1349,10 +1541,10 @@
 
               <div className="panel full-width">
                 <div className="panel-header">
-                  <span className="c-blue">🛰️</span> Source Health &amp; Trust (Multi-Vendor)
+                  <span className="c-blue">🛰️</span> Fleet Coordination Integrity
                   <span className="panel-header-right">
                     Last 5 minutes
-                    <button className="onboard-btn" style={{ marginLeft: 10 }} onClick={handleAddSource}>+ Add New Data Source</button>
+                    <button className="onboard-btn" style={{ marginLeft: 10 }} onClick={handleAddSource}>+ Add ACP Node</button>
                   </span>
                 </div>
                 <div className="panel-body"><SourceHealthPanel events={events} enrichedFused={enrichedFused} dynamicSources={dynamicSources} /></div>
@@ -1360,43 +1552,51 @@
 
               <div className="panel full-width">
                 <div className="panel-header">
-                  <span className="c-purple">●</span> Fused Events (Enriched)
+                  <span className="c-purple">●</span> Verified Mission State
                   <span className="panel-header-right">
                     Last 60 seconds
-                    <ExportButtons data={enrichedFused} baseName="fused-events-export" />
+                    <ExportButtons data={enrichedFused} baseName="verified-mission-state-export" />
                   </span>
                 </div>
                 <div className="panel-body"><FusedEventsPanel enrichedFused={enrichedFused} onSelect={setSelectedEvent} /></div>
               </div>
 
               <div className="panel">
-                <div className="panel-header"><span className="c-orange">●</span> Validation Status
+                <div className="panel-header"><span className="c-orange">●</span> COA Validation Status
                   <span className="panel-header-right">
                     Last 60 seconds
-                    <ExportButtons data={validations} baseName="validation-results-export" />
+                    <ExportButtons data={validations} baseName="coa-validation-results-export" />
                   </span>
                 </div>
                 <div className="panel-body"><ValidationPanel validations={validations} /></div>
               </div>
               <div className="panel">
-                <div className="panel-header"><span className="c-green">●</span> Analytics Output
+                <div className="panel-header"><span className="c-green">●</span> Runtime Mission Analysis
                   <span className="panel-header-right">
                     Last 60 seconds
-                    <ExportButtons data={analytics} baseName="analytics-results-export" />
+                    <ExportButtons data={analytics} baseName="runtime-mission-analysis-export" />
                   </span>
                 </div>
                 <div className="panel-body"><AnalyticsPanel analytics={analytics} /></div>
               </div>
 
               <div className="panel">
-                <div className="panel-header"><span className="c-purple">🧪</span> Analytics Tools / Sandbox Environment</div>
+                <div className="panel-header"><span className="c-purple">🧪</span> Mitigation &amp; Recovery Manager</div>
                 <div className="panel-body"><AnalyticsSandboxPanel /></div>
               </div>
               <div className="panel">
+                <div className="panel-header"><span className="c-red">⚠</span> Runtime Fault Events</div>
+                <div className="panel-body"><RuntimeFaultEventsPanel simState={simState} /></div>
+              </div>
+              <div className="panel">
+                <div className="panel-header"><span className="c-orange">🧰</span> Mitigation Actions</div>
+                <div className="panel-body"><MitigationActionsPanel simState={simState} /></div>
+              </div>
+              <div className="panel">
                 <div className="panel-header">
-                  📋 Audit Log
+                  📋 Runtime Assurance Audit Log
                   <span className="panel-header-right">
-                    <ExportButtons data={logs} baseName="audit-log-export" />
+                    <ExportButtons data={logs} baseName="runtime-assurance-audit-log-export" />
                   </span>
                 </div>
                 <div className="panel-body"><AuditLogPanel logs={logs} /></div>
@@ -1404,9 +1604,9 @@
 
               <div className="panel full-width">
                 <div className="panel-header">
-                  📡 Raw Events
+                  📡 Autonomous Fleet Telemetry
                   <span className="panel-header-right">
-                    <ExportButtons data={events} baseName="raw-events-export" />
+                    <ExportButtons data={events} baseName="autonomous-fleet-telemetry-export" />
                   </span>
                 </div>
               </div>

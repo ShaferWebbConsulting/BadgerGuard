@@ -1,131 +1,59 @@
 ========================================================
-  TRUSTED FUSION GATEWAY — PLAIN-LANGUAGE EXPLAINER
+  BADGER GUARD RTAA PLATFORM — PLAIN-LANGUAGE EXPLAINER
 ========================================================
-
 
 WHAT IS THIS?
 -------------
-The Trusted Fusion Gateway is a system that takes data from
-multiple sensors and satellites, combines it into a single
-picture, checks that nobody tampered with the data, and then
-runs analysis on only the trusted results.
+BADGER Guard is a Runtime Assured Autonomy platform for collaborative
+autonomous fleets. It monitors autonomy behavior in real time,
+validates mission-state decisions (including autonomy-generated COAs),
+and coordinates mitigation when unsafe conditions are detected.
 
-Think of it like a security checkpoint for data:
-  1. Data comes in from many different sources.
-  2. The system merges related data together.
-  3. Independent validators vote on whether the data is legit.
-  4. Only data that passes the vote moves on to analysis.
-  5. A live dashboard shows everything in real time.
+Think of it as an operations safety net for autonomous aircraft:
+  1. Fleet telemetry is ingested from multiple autonomous platforms.
+  2. Mission-state and COA activity is correlated across the fleet.
+  3. Distributed validators vote on runtime mission trust.
+  4. Mission analysis runs on verified mission state.
+  5. Mitigation workflows are triggered for unsafe autonomy behavior.
 
-
-WHAT PROBLEM DOES THIS SOLVE?
-------------------------------
-In defense and intelligence, decisions are made using data from
-many vendors and sensors. The problem is:
-
-  - Any one of those sources could be wrong, hacked, or spoofed.
-  - If bad data gets into your analysis, you make bad decisions.
-  - There is no easy way to see which data is trustworthy and
-    which is not.
-  - You cannot just trust a single source — you need agreement.
-
-Today, most systems blindly accept incoming data. If an adversary
-injects a fake satellite reading or corrupts a sensor feed, that
-bad data flows straight into analytics and briefings. Nobody
-catches it until after a bad decision is already made.
-
-The Trusted Fusion Gateway fixes this by adding a zero-trust
-layer: data is "guilty until proven innocent." Every piece of
-data must be independently verified before it is used.
-
-
-WHY DO PRIMES WANT THIS?
+WHAT DOES IT DEMONSTRATE?
 -------------------------
-Prime contractors (Lockheed Martin, Northrop Grumman, Raytheon,
-BAE Systems, L3Harris, etc.) want this because:
+- runtime assured autonomy
+- mission-level autonomy assurance
+- collaborative autonomous platform monitoring
+- distributed runtime validation
+- autonomy fault detection
+- fleet coordination assurance
+- mitigation and recovery workflows
 
-  1. DATA INTEGRITY IS A NATIONAL SECURITY ISSUE
-     Bad data = bad decisions. In mission-critical systems,
-     trusting unverified sensor data can put lives at risk.
-     This system ensures only verified data reaches analysts
-     and decision-makers.
+SIMULATED AUTONOMOUS PLATFORMS
+------------------------------
+- ISR Drone
+- Escort Drone
+- Autonomous Strike Platform
+- Logistics UAV
+- Fleet Leader Node
 
-  2. MULTI-VENDOR DATA IS THE NEW NORMAL
-     Modern programs pull data from dozens of different vendors,
-     allies, and commercial providers. Each source has different
-     quality and trust levels. This system handles that
-     automatically — it does not matter where the data comes
-     from, it all goes through the same verification process.
+SIMULATED MISSION SCENARIOS
+---------------------------
+- contested airspace
+- degraded communications
+- conflicting task allocation
+- unsafe flight path generation
+- mission replanning
+- fleet coordination failures
 
-  3. ZERO-TRUST IS A DOD MANDATE
-     The Department of Defense requires zero-trust architectures.
-     This system applies zero-trust principles to DATA, not just
-     networks. Every event is verified by independent validators
-     before it is used. This aligns directly with DOD zero-trust
-     strategy.
-
-  4. FASTER DECISION-MAKING
-     Instead of analysts manually checking data sources, the
-     system does it automatically in real time. Verified data
-     flows to analytics immediately. Rejected data is flagged
-     and isolated. This saves hours of manual review.
-
-  5. FULL AUDIT TRAIL
-     Every step is logged — what came in, how it was fused,
-     who voted, what was approved or rejected, and what the
-     analytics produced. This is essential for compliance,
-     after-action reviews, and accountability.
-
-  6. RESILIENCE AGAINST ADVERSARIES
-     The system automatically detects and rejects corrupted,
-     tampered, or spoofed data. Built-in fault injection lets
-     you test what happens when an adversary tries to inject
-     bad data. The system catches it and rejects it.
-
-  7. PLUGGABLE AND EXTENSIBLE
-     The architecture is modular. You can swap in different
-     validation backends (Merkle hash, RSA accumulators, or
-     even future zero-knowledge proofs) without changing the
-     rest of the system. New analytics tools can be loaded
-     into the sandbox without risk.
-
-
-HOW THE DASHBOARD HELPS
------------------------
-The dashboard has two views designed for different users:
-
-  COMMAND VIEW (for operators and decision-makers)
-  ------------------------------------------------
-  Shows everything happening in real time:
-    - Priority events that need immediate attention
-    - Source health and trust scores per vendor
-    - Every fused event with its validation and analytics status
-    - Individual validator votes on each event
-    - Anomaly classifications and scores
-    - Full audit log
-    - Raw events as received
-    - Export buttons (CSV/JSON) for reports
-    - Drill-down modals to investigate specific objects
-
-  Use this when you are monitoring a live mission, running a
-  test, or need to investigate a specific event.
-
-  ANALYST VIEW (for analysts and reviewers)
-  ------------------------------------------
-  Shows aggregate metrics and summaries:
-    - What percentage of data is verified vs. rejected
-    - Consensus success rate across all validators
-    - Average confidence score of fused events
-    - Average number of sources per event
-    - Breakdown of normal vs. elevated vs. critical events
-    - Validation and analytics tables for reference
-
-  Use this when you are reviewing overall system health,
-  briefing leadership, or evaluating data quality trends.
-
+RUNTIME MITIGATION WORKFLOWS
+----------------------------
+- reject unsafe COA
+- constrained maneuver enforcement
+- fleet task reallocation
+- safe loiter mode
+- return-to-base state
+- degraded autonomy mode
 
 IN ONE SENTENCE
 ---------------
-The Trusted Fusion Gateway makes sure that no one — not a
-hacker, not a faulty sensor, not a compromised vendor — can
-sneak bad data into your decision-making process.
+BADGER Guard provides operational trust in autonomous systems by
+continuously validating mission behavior, detecting autonomy faults,
+and coordinating safe recovery actions in contested environments.
