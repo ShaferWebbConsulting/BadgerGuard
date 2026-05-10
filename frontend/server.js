@@ -70,6 +70,6 @@ app.use("/api/:service", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`TFG Dashboard running on http://localhost:${PORT}`);
+  console.log(`BADGER Guard RTAA Dashboard running on http://localhost:${PORT}`);
   console.log("Service targets:", JSON.stringify(serviceMap, null, 2));
 });

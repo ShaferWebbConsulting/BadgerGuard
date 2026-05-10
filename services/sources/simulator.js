@@ -1,13 +1,13 @@
 import { start as startA, stop as stopA } from "./source-a.js";
 import { start as startB, stop as stopB } from "./source-b.js";
 
-console.log("[Simulator] Launching both data sources…");
+console.log("[BADGER Guard Simulator] Launching autonomous fleet platform sources…");
 
 startA();
 startB();
 
 function shutdown() {
-  console.log("\n[Simulator] Shutting down…");
+  console.log("\n[BADGER Guard Simulator] Shutting down autonomous fleet simulation…");
   stopA();
   stopB();
   process.exit(0);

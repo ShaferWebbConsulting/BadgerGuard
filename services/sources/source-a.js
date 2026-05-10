@@ -2,7 +2,9 @@ const INGESTION_URL = process.env.INGESTION_URL || "http://localhost:3001/api/ev
 const INTERVAL = parseInt(process.env.INTERVAL, 10) || 3000;
 
 const OBJECT_IDS = ["OBJ-001", "OBJ-002", "OBJ-003", "OBJ-004", "OBJ-005"];
-const EVENT_TYPES = ["tracking", "position"];
+const PLATFORM_IDS = ["fleet-leader-node", "isr-drone"];
+const EVENT_TYPES = ["mission_state", "flight_state", "autonomy_coa"];
+const MISSION_STATES = ["contested-airspace", "mission-replanning", "on-station", "degraded-comms"];
 
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -10,16 +12,19 @@ function randomFrom(arr) {
 
 function generateEvent() {
   return {
-    source_id: "satellite-alpha",
+    source_id: randomFrom(PLATFORM_IDS),
     event_type: randomFrom(EVENT_TYPES),
     object_id: randomFrom(OBJECT_IDS),
     timestamp: new Date().toISOString(),
     payload: {
+      mission_state: randomFrom(MISSION_STATES),
       latitude: parseFloat((Math.random() * 180 - 90).toFixed(6)),
       longitude: parseFloat((Math.random() * 360 - 180).toFixed(6)),
       altitude: parseFloat((Math.random() * 35000 + 200).toFixed(2)),
       velocity: parseFloat((Math.random() * 8 + 1).toFixed(3)),
       heading: parseFloat((Math.random() * 360).toFixed(2)),
+      coa_generation_active: Math.random() < 0.35,
+      contested_environment: Math.random() < 0.3,
     },
   };
 }
@@ -32,10 +37,10 @@ async function sendEvent(event) {
       body: JSON.stringify(event),
     });
     console.log(
-      `[Source-A] Sent ${event.event_type} for ${event.object_id} → ${res.status}`
+      `[Fleet-Source-A] Sent ${event.event_type} from ${event.source_id} for ${event.object_id} → ${res.status}`
     );
   } catch (err) {
-    console.error(`[Source-A] Connection error: ${err.message}. Will retry…`);
+    console.error(`[Fleet-Source-A] Connection error: ${err.message}. Will retry…`);
   }
 }
 
@@ -43,7 +48,7 @@ let timer = null;
 
 export function start() {
   console.log(
-    `[Source-A] Starting — target ${INGESTION_URL}, interval ${INTERVAL}ms`
+    `[Fleet-Source-A] Starting — target ${INGESTION_URL}, interval ${INTERVAL}ms`
   );
   timer = setInterval(() => sendEvent(generateEvent()), INTERVAL);
 }
@@ -52,7 +57,7 @@ export function stop() {
   if (timer) {
     clearInterval(timer);
     timer = null;
-    console.log("[Source-A] Stopped");
+    console.log("[Fleet-Source-A] Stopped");
   }
 }
 

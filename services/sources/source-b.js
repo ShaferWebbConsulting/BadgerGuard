@@ -2,8 +2,20 @@ const INGESTION_URL = process.env.INGESTION_URL || "http://localhost:3001/api/ev
 const INTERVAL = parseInt(process.env.INTERVAL, 10) || 4000;
 
 const OBJECT_IDS = ["OBJ-001", "OBJ-002", "OBJ-003", "OBJ-004", "OBJ-005"];
-const EVENT_TYPES = ["anomaly", "sensor"];
-const SENSOR_TYPES = ["infrared", "radar", "optical"];
+const PLATFORM_IDS = [
+  "escort-drone",
+  "autonomous-strike-platform",
+  "logistics-uav",
+];
+const EVENT_TYPES = ["coordination", "fault_event", "runtime_alert"];
+const MISSION_SCENARIOS = [
+  "contested airspace",
+  "degraded communications",
+  "conflicting task allocation",
+  "unsafe flight path generation",
+  "mission replanning",
+  "fleet coordination failures",
+];
 
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -16,23 +28,33 @@ function generateEvent() {
 
   const reading = parseFloat((Math.random() * 1000).toFixed(2));
   const threshold = parseFloat((Math.random() * 500 + 250).toFixed(2));
-  const anomalyDetected = Math.random() < 0.1;
+  const anomalyDetected = Math.random() < 0.15;
 
   const payload = {
-    sensor_type: randomFrom(SENSOR_TYPES),
+    mission_scenario: randomFrom(MISSION_SCENARIOS),
+    sensor_type: randomFrom(["infrared", "radar", "optical"]),
     reading,
     threshold,
     anomaly_detected: anomalyDetected,
+    coordination_integrity: parseFloat(Math.random().toFixed(2)),
   };
 
-  // Every 10th event, simulate a corrupted/malicious event
+  // Every 10th event, simulate a runtime autonomy fault
   if (eventCount % 10 === 0) {
     payload.corrupted = true;
-    console.log(`[Source-B] Injecting corrupted event #${eventCount}`);
+    payload.runtime_fault = randomFrom([
+      "unsafe route detected",
+      "mission conflict identified",
+      "deconfliction failure",
+      "fleet synchronization degraded",
+      "communications disruption",
+      "mission reassignment triggered",
+    ]);
+    console.log(`[Fleet-Source-B] Injecting runtime fault event #${eventCount}`);
   }
 
   return {
-    source_id: "sensor-beta",
+    source_id: randomFrom(PLATFORM_IDS),
     event_type: randomFrom(EVENT_TYPES),
     object_id: randomFrom(OBJECT_IDS),
     timestamp: new Date().toISOString(),
@@ -48,10 +70,10 @@ async function sendEvent(event) {
       body: JSON.stringify(event),
     });
     console.log(
-      `[Source-B] Sent ${event.event_type} for ${event.object_id} → ${res.status}`
+      `[Fleet-Source-B] Sent ${event.event_type} from ${event.source_id} for ${event.object_id} → ${res.status}`
     );
   } catch (err) {
-    console.error(`[Source-B] Connection error: ${err.message}. Will retry…`);
+    console.error(`[Fleet-Source-B] Connection error: ${err.message}. Will retry…`);
   }
 }
 
@@ -59,7 +81,7 @@ let timer = null;
 
 export function start() {
   console.log(
-    `[Source-B] Starting — target ${INGESTION_URL}, interval ${INTERVAL}ms`
+    `[Fleet-Source-B] Starting — target ${INGESTION_URL}, interval ${INTERVAL}ms`
   );
   timer = setInterval(() => sendEvent(generateEvent()), INTERVAL);
 }
@@ -68,7 +90,7 @@ export function stop() {
   if (timer) {
     clearInterval(timer);
     timer = null;
-    console.log("[Source-B] Stopped");
+    console.log("[Fleet-Source-B] Stopped");
   }
 }
 
