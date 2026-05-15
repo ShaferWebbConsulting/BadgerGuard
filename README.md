@@ -92,6 +92,20 @@ Mission Autonomy Layer
 - Platform Health
 - Fleet Consensus / Coordination Status
 
+## Interface Views
+
+### Operations View
+
+![Operations View](./OperationsView.png)
+
+The Operations View is the live command dashboard for runtime assurance operators. It combines fleet telemetry, runtime safety alerts, verified mission state, COA validation status, mission analysis, mitigation workflows, audit logs, and fault activity into a single operational picture so teams can quickly see when autonomy behavior becomes unsafe and what corrective action BADGER Guard is recommending.
+
+### Mission Analyst View
+
+![Mission Analyst View](./MissionAnalystView.png)
+
+The Mission Analyst View is the analyst-focused summary of the same runtime data. It highlights validation rates, fleet coordination integrity, and mission analysis distribution so analysts can measure assurance trends, understand confidence and consensus over time, and explain whether the fleet is operating inside acceptable mission risk boundaries.
+
 ## Mock Runtime Assurance Events
 
 - unsafe route detected
